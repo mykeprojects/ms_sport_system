@@ -5,14 +5,12 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SecurityGuard } from './common/guards/security.guard';
-import { MetodosPagoModule } from './metodos_pago/metodos_pago.module';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true }),
     TypeOrmModule.forRootAsync({
-      imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         type: 'mysql' as const,
@@ -25,7 +23,6 @@ import { PaymentMethodModule } from './payment_method/payment_method.module';
         synchronize: false,
       }),
     }),
-    MetodosPagoModule,
     PaymentMethodModule,
   ],
   controllers: [AppController],
