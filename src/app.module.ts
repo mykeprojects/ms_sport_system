@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { SecurityGuard } from './common/guards/security.guard';
 import { MetodosPagoModule } from './metodos_pago/metodos_pago.module';
+import { PaymentMethodModule } from './payment_method/payment_method.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { MetodosPagoModule } from './metodos_pago/metodos_pago.module';
       }),
     }),
     MetodosPagoModule,
+    PaymentMethodModule,
   ],
   controllers: [AppController],
   providers: [
