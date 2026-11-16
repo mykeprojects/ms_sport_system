@@ -10,6 +10,7 @@ const dataSource = new DataSource({
   database: process.env.DB_NAME,
   entities: ['src/**/*.entity.ts'],
   migrations: ['src/migrations/*.ts'],
+  migrationsTableName: 'sport_migrations',
   synchronize: false,
 });
 
