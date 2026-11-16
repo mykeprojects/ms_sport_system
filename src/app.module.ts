@@ -4,10 +4,17 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { CatalogModule } from './catalog/catalog.module';
+import { CatalogCoreModule } from './catalog/catalog.module';
 import { SecurityGuard } from './common/guards/security.guard';
+import { DeporteModule } from './deporte/deporte.module';
+import { EquipoDeporteModule } from './equipo_deporte/equipo-deporte.module';
+import { EquipoModule } from './equipo/equipo.module';
+import { HabilidadModule } from './habilidad/habilidad.module';
+import { JugadorHabilidadModule } from './jugador_habilidad/jugador-habilidad.module';
+import { JugadorModule } from './jugador/jugador.module';
 import { CatalogoDeportivo1763220000000 } from './migrations/1763220000000-CatalogoDeportivo';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
+import { VinculacionModule } from './vinculacion/vinculacion.module';
 
 @Module({
   imports: [
@@ -30,7 +37,14 @@ import { PaymentMethodModule } from './payment_method/payment_method.module';
       }),
     }),
     PaymentMethodModule,
-    CatalogModule,
+    CatalogCoreModule,
+    DeporteModule,
+    EquipoModule,
+    EquipoDeporteModule,
+    JugadorModule,
+    JugadorHabilidadModule,
+    VinculacionModule,
+    HabilidadModule,
   ],
   controllers: [AppController],
   providers: [

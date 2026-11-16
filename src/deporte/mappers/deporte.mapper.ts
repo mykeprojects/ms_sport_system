@@ -1,0 +1,22 @@
+import { Injectable } from '@nestjs/common';
+import { toSport } from '../../catalog/catalog.queries';
+import type { CatalogState, SportRecord } from '../../catalog/catalog.types';
+import type { SaveDeporteDto } from '../dto/save-deporte.dto';
+
+@Injectable()
+export class DeporteMapper {
+  toResponse(state: CatalogState, sport: SportRecord) {
+    return toSport(state, sport);
+  }
+
+  toInput(dto: SaveDeporteDto, id?: number) {
+    return {
+      id,
+      name: dto.name,
+      category: dto.category,
+      description: dto.description ?? '',
+      status: dto.status,
+      subdeportes: dto.subdeportes ?? [],
+    };
+  }
+}

@@ -7,13 +7,13 @@ import {
 import { DataSource, EntityManager } from 'typeorm';
 import { nameKey } from './catalog.text';
 import type { CatalogState, RuleResult } from './catalog.types';
-import { Deporte } from './entities/deporte.entity';
-import { Equipo } from './entities/equipo.entity';
-import { EquipoDeporte } from './entities/equipo-deporte.entity';
-import { Habilidad } from './entities/habilidad.entity';
-import { Jugador } from './entities/jugador.entity';
-import { JugadorHabilidad } from './entities/jugador-habilidad.entity';
-import { Vinculacion } from './entities/vinculacion.entity';
+import { Deporte } from '../deporte/entities/deporte.entity';
+import { Equipo } from '../equipo/entities/equipo.entity';
+import { EquipoDeporte } from '../equipo_deporte/entities/equipo-deporte.entity';
+import { Habilidad } from '../habilidad/entities/habilidad.entity';
+import { Jugador } from '../jugador/entities/jugador.entity';
+import { JugadorHabilidad } from '../jugador_habilidad/entities/jugador-habilidad.entity';
+import { Vinculacion } from '../vinculacion/entities/vinculacion.entity';
 
 type IdMaps = {
   sports: Map<number, number>;
