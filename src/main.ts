@@ -8,10 +8,10 @@ function firstMessage(errors: ValidationError[]): string {
     if (message) return message;
     if (error.children?.length) {
       const nested = firstMessage(error.children);
-      if (nested !== 'Revisa los datos enviados.') return nested;
+      if (nested !== 'Review the submitted data.') return nested;
     }
   }
-  return 'Revisa los datos enviados.';
+  return 'Review the submitted data.';
 }
 
 async function bootstrap() {

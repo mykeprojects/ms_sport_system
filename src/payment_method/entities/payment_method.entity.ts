@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from "typeorm";
+import { Column, Entity, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
+import { PaymentMethodType } from '../payment-method.constants';
 
 @Entity('payment_methods')
 export class PaymentMethod {
@@ -10,6 +11,14 @@ export class PaymentMethod {
 
     @Column({ length: 200 })
     description!: string;
+
+    @Column({
+        name: 'method_type',
+        type: 'varchar',
+        length: 30,
+        default: PaymentMethodType.OTHER,
+    })
+    type!: PaymentMethodType;
 
     @Column({ default: true })
     is_active!: boolean;

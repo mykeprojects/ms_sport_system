@@ -1,4 +1,13 @@
-import  {IsString, IsNotEmpty, IsBoolean, MaxLength, MinLength, IsOptional} from 'class-validator';
+import {
+    IsString,
+    IsNotEmpty,
+    IsBoolean,
+    IsEnum,
+    MaxLength,
+    MinLength,
+    IsOptional,
+} from 'class-validator';
+import { PaymentMethodType } from '../payment-method.constants';
 
 export class CreatePaymentMethodDto {
     @IsString()
@@ -12,6 +21,10 @@ export class CreatePaymentMethodDto {
     @MaxLength(200)
     @IsNotEmpty()
     description!: string;
+
+    @IsEnum(PaymentMethodType)
+    @IsOptional()
+    type?: PaymentMethodType;
 
     @IsBoolean()
     @IsOptional()

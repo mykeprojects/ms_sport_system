@@ -1,6 +1,6 @@
-export type Status = 'activo' | 'inactivo';
-export type ContractStatus = 'activo' | 'finalizado';
-export type SkillCategory = 'Física' | 'Técnica' | 'Táctica' | 'Mental';
+export type Status = 'active' | 'inactive';
+export type ContractStatus = 'active' | 'finished';
+export type SkillCategory = 'Physical' | 'Technical' | 'Tactical' | 'Mental';
 
 export type SportRecord = {
   id: number;
@@ -94,7 +94,7 @@ export type SportInput = {
   category: string;
   description: string;
   status: Status;
-  subdeportes: string[];
+  subsports: string[];
 };
 
 export type TeamInput = {

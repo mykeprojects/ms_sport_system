@@ -46,7 +46,7 @@ function closeContract(
   const endDate = contract.startDate > today ? contract.startDate : today;
   return {
     ...contract,
-    status: 'finalizado',
+    status: 'finished',
     endReason: reason,
     detail,
     endDate,
@@ -66,7 +66,7 @@ function openContract(
     teamId,
     startDate,
     endDate,
-    status: 'activo',
+    status: 'active',
     endReason: null,
     detail: null,
   };
@@ -76,14 +76,14 @@ export function saveSport(state: CatalogState, input: SportInput, now = todayIso
   const name = normalize(input.name);
   const category = normalize(input.category);
   const description = input.description.trim();
-  const subdeportes = input.subdeportes.map(normalize).filter(Boolean);
+  const subsports = input.subsports.map(normalize).filter(Boolean);
   const ids = createIds();
 
   if (!name || !category) {
-    return fail(400, 'Completa los campos obligatorios.');
+    return fail(400, 'Complete all required fields.');
   }
   if (description.length > 250) {
-    return fail(400, 'La descripción admite máximo 250 caracteres.');
+    return fail(400, 'Description cannot exceed 250 characters.');
   }
 
   const ownChildren = new Set(
@@ -91,13 +91,13 @@ export function saveSport(state: CatalogState, input: SportInput, now = todayIso
   );
   const ignore = new Set<number>(input.id ? [input.id, ...ownChildren] : []);
   if (nameTaken(state.sports, name, ignore)) {
-    return fail(409, 'Ya existe un deporte con este nombre.');
+    return fail(409, 'A sport with this name already exists.');
   }
 
   const uniqueSubs: string[] = [];
-  for (const sub of subdeportes) {
+  for (const sub of subsports) {
     if (sameName(sub, name) || uniqueSubs.some((item) => sameName(item, sub))) {
-      return fail(400, `El subdeporte "${sub}" está repetido.`);
+      return fail(400, `The subsport "${sub}" is duplicated.`);
     }
     const existingChild = state.sports.find(
       (sport) => input.id && sport.parentId === input.id && sameName(sport.name, sub),
@@ -105,7 +105,7 @@ export function saveSport(state: CatalogState, input: SportInput, now = todayIso
     const subIgnore = new Set(ignore);
     if (existingChild) subIgnore.add(existingChild.id);
     if (nameTaken(state.sports, sub, subIgnore)) {
-      return fail(409, `Ya existe un deporte con el nombre "${sub}".`);
+      return fail(409, `A sport with the name "${sub}" already exists.`);
     }
     uniqueSubs.push(sub);
   }
@@ -128,7 +128,7 @@ export function saveSport(state: CatalogState, input: SportInput, now = todayIso
         code: nextCode([...state.sports, parent, ...children], 'DEP'),
         name: sub,
         category,
-        description: `Subdeporte de ${name}.`,
+        description: `Subsport of ${name}.`,
         status: input.status,
         parentId: parent.id,
         createdAt: now,
@@ -136,20 +136,20 @@ export function saveSport(state: CatalogState, input: SportInput, now = todayIso
     }
     return success(
       { ...state, sports: [...state.sports, parent, ...children] },
-      'El deporte se registró correctamente.',
+      'Sport created successfully.',
       parent.id,
     );
   }
 
   const current = state.sports.find((sport) => sport.id === input.id && sport.parentId === null);
-  if (!current) return fail(404, 'No se encontró el deporte.');
+  if (!current) return fail(404, 'Sport not found.');
 
   const removed = state.sports.filter(
     (sport) => sport.parentId === current.id && !uniqueSubs.some((sub) => sameName(sub, sport.name)),
   );
   const blocked = removed.find((sport) => state.teamSports.some((link) => link.sportId === sport.id));
   if (blocked) {
-    return fail(409, `No se puede quitar "${blocked.name}" porque tiene equipos asociados.`);
+    return fail(409, `Cannot remove "${blocked.name}" because teams are associated with it.`);
   }
 
   const withoutChildren = state.sports
@@ -171,7 +171,7 @@ export function saveSport(state: CatalogState, input: SportInput, now = todayIso
       code: nextCode([...withoutChildren, ...rebuilt], 'DEP'),
       name: sub,
       category,
-      description: `Subdeporte de ${name}.`,
+      description: `Subsport of ${name}.`,
       status: input.status,
       parentId: current.id,
       createdAt: now,
@@ -180,17 +180,17 @@ export function saveSport(state: CatalogState, input: SportInput, now = todayIso
 
   return success(
     { ...state, sports: [...withoutChildren, ...rebuilt] },
-    'El deporte se actualizó correctamente.',
+    'Sport updated successfully.',
     current.id,
   );
 }
 
 export function deleteSport(state: CatalogState, id: number): RuleResult {
   const sport = state.sports.find((item) => item.id === id && item.parentId === null);
-  if (!sport) return fail(404, 'No se encontró el deporte.');
+  if (!sport) return fail(404, 'Sport not found.');
   const family = state.sports.filter((item) => item.id === id || item.parentId === id).map((item) => item.id);
   if (state.teamSports.some((link) => family.includes(link.sportId))) {
-    return fail(409, `No se puede eliminar "${sport.name}" porque tiene equipos asociados.`);
+    return fail(409, `Cannot delete "${sport.name}" because teams are associated with it.`);
   }
   return success(
     {
@@ -202,7 +202,7 @@ export function deleteSport(state: CatalogState, id: number): RuleResult {
           : player,
       ),
     },
-    `Se eliminó "${sport.name}".`,
+    `Removed "${sport.name}".`,
   );
 }
 
@@ -211,9 +211,9 @@ export function saveTeam(state: CatalogState, input: TeamInput, now = todayIso()
   const shortName = normalize(input.shortName);
   const city = normalize(input.city);
   const description = input.description.trim();
-  if (!name || !shortName || !city) return fail(400, 'Completa los campos obligatorios.');
+  if (!name || !shortName || !city) return fail(400, 'Complete all required fields.');
   if (state.teams.some((team) => team.id !== input.id && sameName(team.name, name))) {
-    return fail(409, 'Ya existe un equipo con este nombre.');
+    return fail(409, 'A team with this name already exists.');
   }
 
   if (!input.id) {
@@ -230,13 +230,13 @@ export function saveTeam(state: CatalogState, input: TeamInput, now = todayIso()
     };
     return success(
       { ...state, teams: [...state.teams, team] },
-      'El equipo se registró correctamente.',
+      'Team created successfully.',
       team.id,
     );
   }
 
   const current = state.teams.find((team) => team.id === input.id);
-  if (!current) return fail(404, 'No se encontró el equipo.');
+  if (!current) return fail(404, 'Team not found.');
   return success(
     {
       ...state,
@@ -244,53 +244,53 @@ export function saveTeam(state: CatalogState, input: TeamInput, now = todayIso()
         team.id === current.id ? { ...team, name, shortName, city, description, status: input.status } : team,
       ),
     },
-    'El equipo se actualizó correctamente.',
+    'Team updated successfully.',
     current.id,
   );
 }
 
 export function deleteTeam(state: CatalogState, id: number): RuleResult {
   const team = state.teams.find((item) => item.id === id);
-  if (!team) return fail(404, 'No se encontró el equipo.');
+  if (!team) return fail(404, 'Team not found.');
   if (state.contracts.some((contract) => contract.teamId === id)) {
-    return fail(409, 'No se puede eliminar el equipo porque tiene jugadores o competencias asociadas.');
+    return fail(409, 'Cannot delete the team because it has players or associated competitions.');
   }
   if (state.teamSports.some((link) => link.teamId === id)) {
     return fail(
       409,
-      'No se puede eliminar el equipo porque tiene deportes asociados. Retira las asociaciones primero.',
+      'Cannot delete the team because sports are associated with it. Remove the associations first.',
     );
   }
   return success(
     { ...state, teams: state.teams.filter((item) => item.id !== id) },
-    `Se eliminó "${team.name}".`,
+    `Removed "${team.name}".`,
   );
 }
 
 export function associateSport(state: CatalogState, teamId: number, sportId: number): RuleResult {
   const team = state.teams.find((item) => item.id === teamId);
   const sport = state.sports.find((item) => item.id === sportId);
-  if (!team || !sport) return fail(404, 'El equipo y el deporte deben existir.');
+  if (!team || !sport) return fail(404, 'The team and sport must exist.');
   if (state.teamSports.some((link) => link.teamId === teamId && link.sportId === sportId)) {
-    return fail(409, 'Este deporte ya se encuentra asociado al equipo.');
+    return fail(409, 'This sport is already associated with the team.');
   }
   return success(
     { ...state, teamSports: [...state.teamSports, { teamId, sportId }] },
-    `${sport.name} asociado correctamente.`,
+    `${sport.name} associated successfully.`,
   );
 }
 
 export function removeSportAssociation(state: CatalogState, teamId: number, sportId: number): RuleResult {
   const sport = state.sports.find((item) => item.id === sportId);
   if (!state.teamSports.some((link) => link.teamId === teamId && link.sportId === sportId)) {
-    return fail(404, 'Esa asociación no existe.');
+    return fail(404, 'That association does not exist.');
   }
   return success(
     {
       ...state,
       teamSports: state.teamSports.filter((link) => !(link.teamId === teamId && link.sportId === sportId)),
     },
-    `Se retiró la asociación${sport ? ` de ${sport.name}` : ''}. El equipo y el deporte siguen registrados.`,
+    `Association${sport ? ` with ${sport.name}` : ''} released. The team and sport remain registered.`,
   );
 }
 
@@ -303,30 +303,30 @@ export function savePlayer(state: CatalogState, input: PlayerInput, now = todayI
   const email = input.email.trim();
   const phone = input.phone.trim();
   if (!fullName || !document || !nationality || !position || !dominantFoot) {
-    return fail(400, 'Completa los campos obligatorios.');
+    return fail(400, 'Complete all required fields.');
   }
   if (!Number.isFinite(input.age) || input.age < 15 || input.age > 50) {
-    return fail(400, 'La edad debe estar entre 15 y 50 años.');
+    return fail(400, 'Age must be between 15 and 50 years.');
   }
   if (!Number.isFinite(input.heightM) || input.heightM < 1.4 || input.heightM > 2.3) {
-    return fail(400, 'La altura debe estar entre 1.40 m y 2.30 m.');
+    return fail(400, 'Height must be between 1.40 m and 2.30 m.');
   }
-  if (email && !email.includes('@')) return fail(400, 'El correo no tiene un formato válido.');
+  if (email && !email.includes('@')) return fail(400, 'Email format is invalid.');
   if (
     input.preferredSportId != null &&
     !state.sports.some((sport) => sport.id === input.preferredSportId)
   ) {
-    return fail(404, 'El deporte preferido no existe.');
+    return fail(404, 'The preferred sport does not exist.');
   }
   if (state.players.some((player) => player.id !== input.id && sameName(player.document, document))) {
-    return fail(409, 'Ya existe un jugador registrado con este número de documento.');
+    return fail(409, 'A player with this document number already exists.');
   }
   if (input.syncTeam && input.teamId != null && !state.teams.some((team) => team.id === input.teamId)) {
-    return fail(404, 'El equipo seleccionado no existe.');
+    return fail(404, 'The selected team does not exist.');
   }
 
   const current = input.id ? state.players.find((player) => player.id === input.id) : undefined;
-  if (input.id && !current) return fail(404, 'No se encontró el jugador.');
+  if (input.id && !current) return fail(404, 'Player not found.');
 
   const player: PlayerRecord = {
     id: current?.id ?? createIds()(),
@@ -347,16 +347,16 @@ export function savePlayer(state: CatalogState, input: PlayerInput, now = todayI
 
   let contracts = state.contracts;
   if (input.syncTeam) {
-    const active = contracts.find((contract) => contract.playerId === player.id && contract.status === 'activo');
+    const active = contracts.find((contract) => contract.playerId === player.id && contract.status === 'active');
     if (input.teamId == null && active) {
       contracts = contracts.map((contract) =>
-        contract.id === active.id ? closeContract(contract, 'Transferido', 'Retirado de la plantilla', now) : contract,
+        contract.id === active.id ? closeContract(contract, 'Transferred', 'Removed from the roster', now) : contract,
       );
     } else if (input.teamId != null && active && active.teamId !== input.teamId) {
       const destination = state.teams.find((team) => team.id === input.teamId);
       contracts = contracts.map((contract) =>
         contract.id === active.id
-          ? closeContract(contract, 'Transferido', `Transferido a ${destination?.name ?? 'otro equipo'}`, now)
+          ? closeContract(contract, 'Transferred', `Transferred to ${destination?.name ?? 'another team'}`, now)
           : contract,
       );
       contracts = [...contracts, openContract(createIds()(), player.id, input.teamId, now, addYears(now, 1))];
@@ -371,16 +371,16 @@ export function savePlayer(state: CatalogState, input: PlayerInput, now = todayI
 
   return success(
     { ...state, players, contracts },
-    current ? 'El jugador se actualizó correctamente.' : 'El jugador se registró correctamente.',
+    current ? 'Player updated successfully.' : 'Player created successfully.',
     player.id,
   );
 }
 
 export function deletePlayer(state: CatalogState, id: number): RuleResult {
   const player = state.players.find((item) => item.id === id);
-  if (!player) return fail(404, 'No se encontró el jugador.');
+  if (!player) return fail(404, 'Player not found.');
   if (state.contracts.some((contract) => contract.playerId === id)) {
-    return fail(409, 'No se puede eliminar el jugador porque tiene equipos con información deportiva asociada.');
+    return fail(409, 'Cannot delete the player because it has teams with associated sports information.');
   }
   return success(
     {
@@ -388,7 +388,7 @@ export function deletePlayer(state: CatalogState, id: number): RuleResult {
       players: state.players.filter((item) => item.id !== id),
       playerSkills: state.playerSkills.filter((link) => link.playerId !== id),
     },
-    `Se eliminó a ${player.fullName}.`,
+    `Removed a ${player.fullName}.`,
   );
 }
 
@@ -398,26 +398,26 @@ export function assignContract(
 ): RuleResult {
   const player = state.players.find((item) => item.id === input.playerId);
   const team = state.teams.find((item) => item.id === input.teamId);
-  if (!player || !team) return fail(404, 'El jugador y el equipo deben existir.');
+  if (!player || !team)   return fail(404, 'The player and team must exist.');
   if (!input.startDate || !input.endDate) {
-    return fail(400, 'Indica la fecha de inicio y la fecha de fin del contrato.');
+    return fail(400, 'Provide the contract start and end dates.');
   }
   if (input.endDate < input.startDate) {
-    return fail(400, 'La fecha de fin debe ser igual o posterior a la de inicio.');
+    return fail(400, 'The end date must be equal to or later than the start date.');
   }
-  const active = state.contracts.find((contract) => contract.playerId === player.id && contract.status === 'activo');
-  if (active?.teamId === team.id) return fail(409, 'Este jugador ya se encuentra asociado al equipo.');
+  const active = state.contracts.find((contract) => contract.playerId === player.id && contract.status === 'active');
+  if (active?.teamId === team.id) return fail(409, 'This player is already associated with the team.');
   if (active) {
     const currentTeam = state.teams.find((item) => item.id === active.teamId);
     return fail(
       409,
-      `El jugador ya pertenece a ${currentTeam?.name ?? 'otro equipo'}. Retíralo de esa plantilla para asignarlo.`,
+      `The player already belongs to ${currentTeam?.name ?? 'another team'}. Release the current roster assignment first.`,
     );
   }
   const contract = openContract(createIds()(), player.id, team.id, input.startDate, input.endDate);
   return success(
     { ...state, contracts: [...state.contracts, contract] },
-    `${player.fullName} quedó asignado a ${team.name}. Su historial anterior se conserva.`,
+    `${player.fullName} was assigned to ${team.name}. The previous history is preserved.`,
     contract.id,
   );
 }
@@ -430,9 +430,9 @@ export function updateContract(
   now = todayIso(),
 ): RuleResult {
   const current = state.contracts.find((contract) => contract.id === contractId);
-  if (!current) return fail(404, 'No se encontró la vinculación.');
-  if (!startDate || !endDate || endDate < startDate) return fail(400, 'Revisa las fechas del contrato.');
-  const finished = current.status === 'activo' && endDate < now;
+  if (!current) return fail(404, 'Contract not found.');
+  if (!startDate || !endDate || endDate < startDate) return fail(400, 'Check the contract dates.');
+  const finished = current.status === 'active' && endDate < now;
   return success(
     {
       ...state,
@@ -442,14 +442,14 @@ export function updateContract(
               ...contract,
               startDate,
               endDate,
-              status: finished ? 'finalizado' : contract.status,
-              endReason: finished ? 'Finalizó contrato' : contract.endReason,
-              detail: finished ? 'Fin del contrato acordado' : contract.detail,
+              status: finished ? 'finished' : contract.status,
+              endReason: finished ? 'Contract completed' : contract.endReason,
+              detail: finished ? 'Agreed contract completion' : contract.detail,
             }
           : contract,
       ),
     },
-    'La vinculación se actualizó correctamente.',
+    'Contract updated successfully.',
     contractId,
   );
 }
@@ -462,11 +462,11 @@ export function releasePlayer(
   now = todayIso(),
 ): RuleResult {
   const current = state.contracts.find((contract) => contract.id === contractId);
-  if (!current || current.status !== 'activo') {
-    return fail(404, 'El jugador no tiene una vinculación activa para retirar.');
+  if (!current || current.status !== 'active') {
+    return fail(404, 'The player has no active contract to release.');
   }
-  const cleanReason = normalize(reason) || 'Transferido';
-  const cleanDetail = detail.trim() || 'El jugador dejó la plantilla actual y su vinculación quedó en el historial.';
+  const cleanReason = normalize(reason) || 'Transferred';
+  const cleanDetail = detail.trim() || 'The player left the current roster and the contract was moved to history.';
   return success(
     {
       ...state,
@@ -474,16 +474,16 @@ export function releasePlayer(
         contract.id === contractId ? closeContract(contract, cleanReason, cleanDetail, now) : contract,
       ),
     },
-    'El jugador dejó la plantilla actual. Su vinculación quedó en el historial.',
+    'The player left the current roster. The contract was moved to history.',
   );
 }
 
 export function saveSkill(state: CatalogState, input: SkillInput): RuleResult {
   const name = normalize(input.name);
   const description = input.description.trim();
-  if (!name || !input.category || !description) return fail(400, 'Completa los campos obligatorios.');
+  if (!name || !input.category || !description) return fail(400, 'Complete all required fields.');
   if (state.skills.some((skill) => skill.id !== input.id && sameName(skill.name, name))) {
-    return fail(409, 'Ya existe una habilidad con este nombre.');
+    return fail(409, 'A skill with this name already exists.');
   }
   if (!input.id) {
     const skill: SkillRecord = {
@@ -495,12 +495,12 @@ export function saveSkill(state: CatalogState, input: SkillInput): RuleResult {
     };
     return success(
       { ...state, skills: [...state.skills, skill] },
-      'La habilidad se registró correctamente.',
+      'Skill created successfully.',
       skill.id,
     );
   }
   const current = state.skills.find((skill) => skill.id === input.id);
-  if (!current) return fail(404, 'No se encontró la habilidad.');
+  if (!current) return fail(404, 'Skill not found.');
   return success(
     {
       ...state,
@@ -508,33 +508,33 @@ export function saveSkill(state: CatalogState, input: SkillInput): RuleResult {
         skill.id === current.id ? { ...skill, name, category: input.category, description } : skill,
       ),
     },
-    'La habilidad se actualizó correctamente.',
+    'Skill updated successfully.',
     current.id,
   );
 }
 
 export function deleteSkill(state: CatalogState, id: number): RuleResult {
   const skill = state.skills.find((item) => item.id === id);
-  if (!skill) return fail(404, 'No se encontró la habilidad.');
+  if (!skill) return fail(404, 'Skill not found.');
   const assigned = state.playerSkills.filter((link) => link.skillId === id).length;
   if (assigned > 0) {
     return fail(
       409,
-      `No se puede eliminar "${skill.name}" porque está asignada a ${assigned} ${assigned === 1 ? 'jugador' : 'jugadores'}.`,
+      `Cannot delete "${skill.name}" because it is assigned to ${assigned} ${assigned === 1 ? 'player' : 'players'}.`,
     );
   }
   return success(
     { ...state, skills: state.skills.filter((item) => item.id !== id) },
-    `Se eliminó "${skill.name}".`,
+    `Removed "${skill.name}".`,
   );
 }
 
 export function assignSkill(state: CatalogState, playerId: number, skillId: number): RuleResult {
   const player = state.players.find((item) => item.id === playerId);
   const skill = state.skills.find((item) => item.id === skillId);
-  if (!player || !skill) return fail(404, 'El jugador y la habilidad deben existir.');
+  if (!player || !skill) return fail(404, 'The player and skill must exist.');
   if (state.playerSkills.some((link) => link.playerId === playerId && link.skillId === skillId)) {
-    return fail(409, 'Esta habilidad ya se encuentra asignada al jugador.');
+    return fail(409, 'This skill is already assigned to the player.');
   }
   const seed = `${playerId}:${skillId}`.split('').reduce((total, char) => total + char.charCodeAt(0), 0);
   return success(
@@ -542,19 +542,19 @@ export function assignSkill(state: CatalogState, playerId: number, skillId: numb
       ...state,
       playerSkills: [...state.playerSkills, { playerId, skillId, score: 68 + (seed % 28) }],
     },
-    'Habilidad asignada correctamente.',
+    'Skill assigned successfully.',
   );
 }
 
 export function removePlayerSkill(state: CatalogState, playerId: number, skillId: number): RuleResult {
   if (!state.playerSkills.some((link) => link.playerId === playerId && link.skillId === skillId)) {
-    return fail(404, 'El jugador no tiene esa habilidad.');
+    return fail(404, 'The player does not have that skill.');
   }
   return success(
     {
       ...state,
       playerSkills: state.playerSkills.filter((link) => !(link.playerId === playerId && link.skillId === skillId)),
     },
-    'Se retiró la habilidad del jugador. La habilidad sigue en el catálogo.',
+    'Skill released from the player. The skill remains in the catalog.',
   );
 }

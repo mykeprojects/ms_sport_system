@@ -56,7 +56,8 @@ export class PaymentMethodService {
     if(!paymentMethod){
       throw new NotFoundException(`Payment Method with ${id} not found`);
     }
-    await this.paymentMethodRepository.remove(paymentMethod);
-    return { message: `Payment Method #${id} deleted successfully`};
+    paymentMethod.is_active = false;
+    await this.paymentMethodRepository.save(paymentMethod);
+    return { message: `Payment Method #${id} deactivated successfully`};
   }
 }

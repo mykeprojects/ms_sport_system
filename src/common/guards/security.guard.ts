@@ -38,16 +38,16 @@ export class SecurityGuard implements CanActivate {
 
     const securityBaseUrl = this.configService.get<string>('MS_SECURITY');
     if (!securityBaseUrl) {
-      this.logger.error('MS_SECURITY no esta configurada');
-      throw new ServiceUnavailableException('Servicio de seguridad no configurado');
+      this.logger.error('MS_SECURITY is not configured');
+      throw new ServiceUnavailableException('Security service is not configured');
     }
 
     try {
       const response = await axios.post<PermissionValidationResponse>(
         `${securityBaseUrl}/api/internal/security/permissions-validation`,
         {
-          // La tabla de permisos de ms_security registra la ruta del recurso.
-          // No se incluye el query string porque no forma parte del permiso.
+          // The ms_security permissions table stores the resource path.
+          // The query string is excluded because it is not part of the permission.
           url: request.path,
           method: request.method,
         },
@@ -59,38 +59,38 @@ export class SecurityGuard implements CanActivate {
 
       if (response.data.allowed === true) return true;
 
-      throw new ForbiddenException('No tiene permiso para acceder a este recurso');
+      throw new ForbiddenException('You do not have permission to access this resource');
     } catch (error) {
-      // No se transforma el rechazo normal de permisos en un error de infraestructura.
+      // A normal permission rejection is not transformed into an infrastructure error.
       if (error instanceof ForbiddenException) throw error;
 
       if (axios.isAxiosError(error)) {
         const status = error.response?.status;
         this.logger.warn(
-          `Validacion de permisos rechazada: ${status ?? error.code ?? 'sin respuesta'}`,
+          `Permission validation rejected: ${status ?? error.code ?? 'no response'}`,
         );
 
         if (status === 401) {
-          throw new UnauthorizedException('Token invalido o expirado');
+          throw new UnauthorizedException('Invalid or expired token');
         }
         if (status === 403) {
-          throw new ForbiddenException('No tiene permiso para acceder a este recurso');
+          throw new ForbiddenException('You do not have permission to access this resource');
         }
       }
 
-      this.logger.error('No fue posible consultar el servicio de seguridad');
-      throw new ServiceUnavailableException('Servicio de seguridad no disponible');
+      this.logger.error('Unable to query the security service');
+      throw new ServiceUnavailableException('Security service unavailable');
     }
   }
 
   private extractBearerToken(authorization?: string): string {
     if (!authorization) {
-      throw new UnauthorizedException('Token de autorizacion faltante');
+      throw new UnauthorizedException('Authorization token is missing');
     }
 
     const [scheme, token] = authorization.split(' ');
     if (scheme !== 'Bearer' || !token || authorization.split(' ').length !== 2) {
-      throw new UnauthorizedException('Formato de Authorization invalido');
+      throw new UnauthorizedException('Invalid Authorization format');
     }
 
     return token;
