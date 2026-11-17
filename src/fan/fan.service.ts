@@ -9,6 +9,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { PaymentMethod } from '../payment_method/entities/payment_method.entity';
+import { validateFanPaymentMethodDetails } from '../payment_method/payment-method.rules';
 import { CreateFanPaymentMethodDto } from './dto/create-fan-payment-method.dto';
 import { UpdateFanPaymentMethodDto } from './dto/update-fan-payment-method.dto';
 import { Fan } from './entities/fan.entity';
@@ -92,6 +93,11 @@ export class FanService {
     }
 
     const maskedReference = dto.maskedReference?.trim() || '***';
+    const holderName = dto.holderName?.trim() || null;
+    validateFanPaymentMethodDetails(paymentMethod.type, {
+      maskedReference: dto.maskedReference,
+      holderName,
+    });
     const duplicated = await this.fanPaymentMethodRepository.findOne({
       where: { fanId: fan.id, paymentMethodId: dto.paymentMethodId, maskedReference },
     });
@@ -100,13 +106,22 @@ export class FanService {
     }
 
     const saved = await this.fanPaymentMethodRepository.save(
-      this.mapper.toPaymentMethodEntity(fan.id, dto),
+      this.mapper.toPaymentMethodEntity(fan.id, {
+        ...dto,
+        maskedReference,
+        holderName: holderName ?? undefined,
+      }),
     );
     return this.mapper.toPaymentMethodResponse(saved, paymentMethod.name);
   }
 
   async updatePaymentMethod(context: FanContext, id: number, dto: UpdateFanPaymentMethodDto) {
     const owned = await this.getOwnedPaymentMethod(context, id);
+    const paymentMethod = await this.getPaymentMethod(owned.paymentMethodId);
+    validateFanPaymentMethodDetails(paymentMethod.type, {
+      maskedReference: dto.maskedReference ?? owned.maskedReference,
+      holderName: dto.holderName ?? owned.holderName,
+    });
     const updated = await this.fanPaymentMethodRepository.save(
       this.mapper.applyPaymentMethodUpdate(owned, dto),
     );
@@ -122,11 +137,12 @@ export class FanService {
     try {
       await this.fanPaymentMethodRepository.remove(owned);
     } catch (error) {
-      // Referenced by existing bets: the row cannot be physically deleted.
       if (this.isReferencedByRows(error)) {
-        throw new ConflictException(
-          'This payment method is referenced by existing bets. Deactivate it instead.',
-        );
+        owned.isActive = false;
+        const deactivated = await this.fanPaymentMethodRepository.save(owned);
+        return {
+          message: `Payment method #${deactivated.id} was deactivated because it is referenced by existing bets.`,
+        };
       }
       throw error;
     }
@@ -151,12 +167,11 @@ export class FanService {
     if (!owned.isActive) {
       throw new ConflictException('The selected payment method is inactive.');
     }
-    const paymentMethod = await this.paymentMethodRepository.findOne({
-      where: { id: owned.paymentMethodId },
+    const paymentMethod = await this.getPaymentMethod(owned.paymentMethodId);
+    validateFanPaymentMethodDetails(paymentMethod.type, {
+      maskedReference: owned.maskedReference,
+      holderName: owned.holderName,
     });
-    if (!paymentMethod) {
-      throw new NotFoundException('The selected payment method does not exist.');
-    }
     if (!paymentMethod.is_active) {
       throw new ConflictException('The selected payment method is not active.');
     }
@@ -180,6 +195,14 @@ export class FanService {
     if (unique.length === 0) return new Map();
     const methods = await this.paymentMethodRepository.find({ where: { id: In(unique) } });
     return new Map(methods.map((method) => [method.id, method.name]));
+  }
+
+  private async getPaymentMethod(id: number): Promise<PaymentMethod> {
+    const paymentMethod = await this.paymentMethodRepository.findOne({ where: { id } });
+    if (!paymentMethod) {
+      throw new NotFoundException('The selected payment method does not exist.');
+    }
+    return paymentMethod;
   }
 
   private isReferencedByRows(error: unknown): boolean {

@@ -16,7 +16,9 @@ import { JugadorHabilidadModule } from './jugador_habilidad/jugador-habilidad.mo
 import { JugadorModule } from './jugador/jugador.module';
 import { MatchModule } from './match/match.module';
 import { CatalogoDeportivo1763220000000 } from './migrations/1763220000000-CatalogoDeportivo';
+import { InitPaymentMethods1794797184631 } from './migrations/1794797184631-InitPaymentMethods';
 import { InitBetting1795100000000 } from './migrations/1795100000000-InitBetting';
+import { AddPaymentMethodType1795200000000 } from './migrations/1795200000000-AddPaymentMethodType';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
 import { VinculacionModule } from './vinculacion/vinculacion.module';
@@ -35,7 +37,12 @@ import { VinculacionModule } from './vinculacion/vinculacion.module';
         database: configService.get<string>('DB_NAME'),
         charset: 'utf8mb4',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [CatalogoDeportivo1763220000000, InitBetting1795100000000],
+        migrations: [
+          CatalogoDeportivo1763220000000,
+          InitPaymentMethods1794797184631,
+          InitBetting1795100000000,
+          AddPaymentMethodType1795200000000,
+        ],
         migrationsRun: true,
         migrationsTableName: 'sport_migrations',
         synchronize: false,
