@@ -95,6 +95,8 @@ describe('HU-GC-11 betting flow', () => {
     const match = await matchService.create({
       homeTeam: 'HU11 Home FC',
       awayTeam: 'HU11 Away FC',
+      homeTeamId: 1,
+      awayTeamId: 2,
       startsAt: futureDate(120),
       homeOdd: 2,
       awayOdd: 3,
@@ -105,6 +107,8 @@ describe('HU-GC-11 betting flow', () => {
     const secondMatch = await matchService.create({
       homeTeam: 'HU11 Pending Home',
       awayTeam: 'HU11 Pending Away',
+      homeTeamId: 1,
+      awayTeamId: 2,
       startsAt: futureDate(180),
       homeOdd: 1.8,
       awayOdd: 2.2,

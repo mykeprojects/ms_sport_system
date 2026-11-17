@@ -21,6 +21,7 @@ export class MatchService {
   ) {}
 
   async create(dto: CreateMatchDto) {
+    this.assertParticipantTeams(dto.homeTeamId, dto.awayTeamId);
     const now = new Date();
     const startsAt = new Date(dto.startsAt);
     const bettingClosesAt = dto.bettingClosesAt ? new Date(dto.bettingClosesAt) : startsAt;
@@ -37,7 +38,7 @@ export class MatchService {
       return this.mapper.toResponse(saved);
     } catch (error) {
       if (this.isMissingReference(error)) {
-        throw new NotFoundException('The selected sport does not exist.');
+        throw new NotFoundException('The selected sport or team does not exist.');
       }
       throw error;
     }
@@ -72,6 +73,7 @@ export class MatchService {
     }
 
     this.mapper.applyUpdate(match, dto);
+    this.assertParticipantTeams(match.homeTeamId, match.awayTeamId);
     // Keep the betting window consistent when only the start is moved.
     if (dto.startsAt !== undefined && dto.bettingClosesAt === undefined) {
       match.bettingClosesAt = match.startsAt;
@@ -149,6 +151,15 @@ export class MatchService {
         String((error as { code?: string }).code),
       )
     );
+  }
+
+  private assertParticipantTeams(homeTeamId: number, awayTeamId: number): void {
+    if (!Number.isInteger(homeTeamId) || !Number.isInteger(awayTeamId)) {
+      throw new BadRequestException('Both participant team IDs are required.');
+    }
+    if (homeTeamId === awayTeamId) {
+      throw new BadRequestException('A match must have two different participant teams.');
+    }
   }
 
   private isMissingReference(error: unknown): boolean {

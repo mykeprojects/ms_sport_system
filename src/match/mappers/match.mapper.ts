@@ -17,6 +17,8 @@ export class MatchMapper {
     const entity = new Match();
     entity.homeTeam = dto.homeTeam.trim();
     entity.awayTeam = dto.awayTeam.trim();
+    entity.homeTeamId = dto.homeTeamId;
+    entity.awayTeamId = dto.awayTeamId;
     entity.sportId = dto.sportId ?? null;
     entity.scheduledAt = dto.scheduledAt ? new Date(dto.scheduledAt) : null;
     entity.startsAt = new Date(dto.startsAt);
@@ -35,6 +37,8 @@ export class MatchMapper {
   applyUpdate(entity: Match, dto: UpdateMatchDto): Match {
     if (dto.homeTeam !== undefined) entity.homeTeam = dto.homeTeam.trim();
     if (dto.awayTeam !== undefined) entity.awayTeam = dto.awayTeam.trim();
+    if (dto.homeTeamId !== undefined) entity.homeTeamId = dto.homeTeamId;
+    if (dto.awayTeamId !== undefined) entity.awayTeamId = dto.awayTeamId;
     if (dto.sportId !== undefined) entity.sportId = dto.sportId;
     if (dto.scheduledAt !== undefined) entity.scheduledAt = new Date(dto.scheduledAt);
     if (dto.startsAt !== undefined) entity.startsAt = new Date(dto.startsAt);

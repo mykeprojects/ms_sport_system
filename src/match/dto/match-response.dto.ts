@@ -5,6 +5,8 @@ export class MatchResponseDto {
   id!: number;
   homeTeam!: string;
   awayTeam!: string;
+  homeTeamId!: number;
+  awayTeamId!: number;
   sportId!: number | null;
   scheduledAt!: Date | null;
   startsAt!: Date;
@@ -24,6 +26,8 @@ export function toMatchResponse(match: Match): MatchResponseDto {
     id: match.id,
     homeTeam: match.homeTeam,
     awayTeam: match.awayTeam,
+    homeTeamId: match.homeTeamId,
+    awayTeamId: match.awayTeamId,
     sportId: match.sportId,
     scheduledAt: match.scheduledAt,
     startsAt: match.startsAt,

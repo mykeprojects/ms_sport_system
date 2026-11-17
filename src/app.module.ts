@@ -4,6 +4,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { AnnotationModule } from './annotation/annotation.module';
 import { BetModule } from './bet/bet.module';
 import { CatalogCoreModule } from './catalog/catalog.module';
 import { SecurityGuard } from './common/guards/security.guard';
@@ -19,6 +20,7 @@ import { CatalogoDeportivo1763220000000 } from './migrations/1763220000000-Catal
 import { InitPaymentMethods1794797184631 } from './migrations/1794797184631-InitPaymentMethods';
 import { InitBetting1795100000000 } from './migrations/1795100000000-InitBetting';
 import { AddPaymentMethodType1795200000000 } from './migrations/1795200000000-AddPaymentMethodType';
+import { InitAnnotations1795300000000 } from './migrations/1795300000000-InitAnnotations';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
 import { VinculacionModule } from './vinculacion/vinculacion.module';
@@ -42,6 +44,7 @@ import { VinculacionModule } from './vinculacion/vinculacion.module';
           InitPaymentMethods1794797184631,
           InitBetting1795100000000,
           AddPaymentMethodType1795200000000,
+          InitAnnotations1795300000000,
         ],
         migrationsRun: true,
         migrationsTableName: 'sport_migrations',
@@ -61,6 +64,7 @@ import { VinculacionModule } from './vinculacion/vinculacion.module';
     MatchModule,
     BetModule,
     NotificationsModule,
+    AnnotationModule,
   ],
   controllers: [AppController],
   providers: [

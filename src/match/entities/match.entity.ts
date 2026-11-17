@@ -13,6 +13,12 @@ export class Match {
   @Column({ name: 'away_team', type: 'varchar', length: 120 })
   awayTeam: string;
 
+  @Column({ name: 'home_team_id', type: 'int' })
+  homeTeamId: number;
+
+  @Column({ name: 'away_team_id', type: 'int' })
+  awayTeamId: number;
+
   /** Optional link to the existing sport catalog. */
   @Column({ name: 'sport_id', type: 'int', nullable: true })
   sportId: number | null;

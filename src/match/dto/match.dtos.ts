@@ -23,6 +23,14 @@ export class CreateMatchDto {
   @MaxLength(120)
   awayTeam!: string;
 
+  @IsInt()
+  @Min(1)
+  homeTeamId!: number;
+
+  @IsInt()
+  @Min(1)
+  awayTeamId!: number;
+
   @IsOptional()
   @IsInt()
   @Min(1)
@@ -73,6 +81,16 @@ export class UpdateMatchDto {
   @IsNotEmpty()
   @MaxLength(120)
   awayTeam?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  homeTeamId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  awayTeamId?: number;
 
   @IsOptional()
   @IsInt()
