@@ -9,10 +9,10 @@ export class InitAnnotations1795300000000 implements MigrationInterface {
         'ALTER TABLE `matches` ADD `home_team_id` int NOT NULL, ADD `away_team_id` int NOT NULL',
       );
       await queryRunner.query(
-        'ALTER TABLE `matches` ADD CONSTRAINT `fk_matches_home_team` FOREIGN KEY (`home_team_id`) REFERENCES `equipos`(`id`)',
+        'ALTER TABLE `matches` ADD CONSTRAINT `fk_matches_home_team` FOREIGN KEY (`home_team_id`) REFERENCES `teams`(`id`)',
       );
       await queryRunner.query(
-        'ALTER TABLE `matches` ADD CONSTRAINT `fk_matches_away_team` FOREIGN KEY (`away_team_id`) REFERENCES `equipos`(`id`)',
+        'ALTER TABLE `matches` ADD CONSTRAINT `fk_matches_away_team` FOREIGN KEY (`away_team_id`) REFERENCES `teams`(`id`)',
       );
     } else {
       await queryRunner.query(
@@ -20,9 +20,9 @@ export class InitAnnotations1795300000000 implements MigrationInterface {
       );
     }
 
-    if (!(await queryRunner.hasTable('anotaciones'))) {
+    if (!(await queryRunner.hasTable('annotations'))) {
       await queryRunner.query(`
-        CREATE TABLE \`anotaciones\` (
+        CREATE TABLE \`annotations\` (
           \`id\` int NOT NULL AUTO_INCREMENT,
           \`match_id\` int NOT NULL,
           \`player_id\` int NOT NULL,
@@ -35,15 +35,15 @@ export class InitAnnotations1795300000000 implements MigrationInterface {
           KEY \`idx_annotations_match\` (\`match_id\`),
           KEY \`idx_annotations_player\` (\`player_id\`),
           CONSTRAINT \`fk_annotations_match\` FOREIGN KEY (\`match_id\`) REFERENCES \`matches\`(\`id\`),
-          CONSTRAINT \`fk_annotations_player\` FOREIGN KEY (\`player_id\`) REFERENCES \`jugadores\`(\`id\`),
-          CONSTRAINT \`fk_annotations_team\` FOREIGN KEY (\`team_id\`) REFERENCES \`equipos\`(\`id\`)
+          CONSTRAINT \`fk_annotations_player\` FOREIGN KEY (\`player_id\`) REFERENCES \`players\`(\`id\`),
+          CONSTRAINT \`fk_annotations_team\` FOREIGN KEY (\`team_id\`) REFERENCES \`teams\`(\`id\`)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
       `);
     }
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('DROP TABLE IF EXISTS `anotaciones`');
+    await queryRunner.query('DROP TABLE IF EXISTS `annotations`');
     await queryRunner.query('ALTER TABLE `matches` DROP FOREIGN KEY `fk_matches_home_team`');
     await queryRunner.query('ALTER TABLE `matches` DROP FOREIGN KEY `fk_matches_away_team`');
     await queryRunner.query('ALTER TABLE `matches` DROP COLUMN `home_team_id`, DROP COLUMN `away_team_id`');

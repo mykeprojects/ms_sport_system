@@ -1,17 +1,17 @@
 import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Jugador } from '../jugador/entities/jugador.entity';
+import { Player } from '../player/entities/player.entity';
 import { Match } from '../match/entities/match.entity';
-import { Vinculacion } from '../vinculacion/entities/vinculacion.entity';
+import { Contract } from '../contract/entities/contract.entity';
 
 @Injectable()
 export class AnnotationParticipantService {
   constructor(
-    @InjectRepository(Jugador)
-    private readonly playerRepository: Repository<Jugador>,
-    @InjectRepository(Vinculacion)
-    private readonly contractRepository: Repository<Vinculacion>,
+    @InjectRepository(Player)
+    private readonly playerRepository: Repository<Player>,
+    @InjectRepository(Contract)
+    private readonly contractRepository: Repository<Contract>,
   ) {}
 
   async resolveTeamId(match: Match, playerId: number): Promise<number> {
@@ -30,9 +30,9 @@ export class AnnotationParticipantService {
     }
 
     const contracts = await this.contractRepository.find({
-      where: { jugadorId: player.id, status: 'activo' },
+      where: { playerId: player.id, status: 'active' },
     });
-    const teamId = contracts.find((contract) => participantTeamIds.includes(contract.equipoId))?.equipoId;
+    const teamId = contracts.find((contract) => participantTeamIds.includes(contract.teamId))?.teamId;
     if (!teamId) {
       throw new ConflictException(
         'The selected player does not belong to a team participating in this match.',

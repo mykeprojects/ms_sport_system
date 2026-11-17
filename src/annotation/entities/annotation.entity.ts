@@ -1,6 +1,6 @@
 import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
-@Entity('anotaciones')
+@Entity('annotations')
 export class Annotation {
   @PrimaryGeneratedColumn()
   id: number;

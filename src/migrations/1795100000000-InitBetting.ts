@@ -57,7 +57,7 @@ export class InitBetting1795100000000 implements MigrationInterface {
         KEY \`idx_matches_status\` (\`status\`),
         KEY \`idx_matches_starts_at\` (\`starts_at\`),
         KEY \`idx_matches_sport\` (\`sport_id\`),
-        CONSTRAINT \`fk_matches_sport\` FOREIGN KEY (\`sport_id\`) REFERENCES \`deportes\` (\`id\`) ON DELETE SET NULL
+        CONSTRAINT \`fk_matches_sport\` FOREIGN KEY (\`sport_id\`) REFERENCES \`sports\` (\`id\`) ON DELETE SET NULL
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
 

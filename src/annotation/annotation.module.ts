@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Jugador } from '../jugador/entities/jugador.entity';
+import { Player } from '../player/entities/player.entity';
 import { MatchModule } from '../match/match.module';
-import { Vinculacion } from '../vinculacion/entities/vinculacion.entity';
+import { Contract } from '../contract/entities/contract.entity';
 import { AnnotationController } from './annotation.controller';
 import { AnnotationParticipantService } from './annotation-participant.service';
 import { AnnotationService } from './annotation.service';
@@ -12,7 +12,7 @@ import { AnnotationMapper } from './mappers/annotation.mapper';
 @Module({
   imports: [
     MatchModule,
-    TypeOrmModule.forFeature([Annotation, Jugador, Vinculacion]),
+    TypeOrmModule.forFeature([Annotation, Player, Contract]),
   ],
   controllers: [AnnotationController],
   providers: [AnnotationService, AnnotationParticipantService, AnnotationMapper],

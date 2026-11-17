@@ -7,13 +7,13 @@ import {
 import { DataSource, EntityManager } from 'typeorm';
 import { nameKey } from './catalog.text';
 import type { CatalogState, RuleResult } from './catalog.types';
-import { Deporte } from '../deporte/entities/deporte.entity';
-import { Equipo } from '../equipo/entities/equipo.entity';
-import { EquipoDeporte } from '../equipo_deporte/entities/equipo-deporte.entity';
-import { Habilidad } from '../habilidad/entities/habilidad.entity';
-import { Jugador } from '../jugador/entities/jugador.entity';
-import { JugadorHabilidad } from '../jugador_habilidad/entities/jugador-habilidad.entity';
-import { Vinculacion } from '../vinculacion/entities/vinculacion.entity';
+import { Sport } from '../sport/entities/sport.entity';
+import { Team } from '../team/entities/team.entity';
+import { TeamSport } from '../team_sport/entities/team-sport.entity';
+import { Skill } from '../skill/entities/skill.entity';
+import { Player } from '../player/entities/player.entity';
+import { PlayerSkill } from '../player_skill/entities/player-skill.entity';
+import { Contract } from '../contract/entities/contract.entity';
 
 type IdMaps = {
   sports: Map<number, number>;
@@ -29,13 +29,13 @@ export class CatalogStore {
 
   async load(manager: EntityManager = this.dataSource.manager): Promise<CatalogState> {
     const [sports, teams, teamSports, players, contracts, skills, playerSkills] = await Promise.all([
-      manager.find(Deporte, { order: { id: 'ASC' } }),
-      manager.find(Equipo, { order: { id: 'ASC' } }),
-      manager.find(EquipoDeporte, { order: { id: 'ASC' } }),
-      manager.find(Jugador, { order: { id: 'ASC' } }),
-      manager.find(Vinculacion, { order: { id: 'ASC' } }),
-      manager.find(Habilidad, { order: { id: 'ASC' } }),
-      manager.find(JugadorHabilidad, { order: { id: 'ASC' } }),
+      manager.find(Sport, { order: { id: 'ASC' } }),
+      manager.find(Team, { order: { id: 'ASC' } }),
+      manager.find(TeamSport, { order: { id: 'ASC' } }),
+      manager.find(Player, { order: { id: 'ASC' } }),
+      manager.find(Contract, { order: { id: 'ASC' } }),
+      manager.find(Skill, { order: { id: 'ASC' } }),
+      manager.find(PlayerSkill, { order: { id: 'ASC' } }),
     ]);
 
     return {
@@ -60,7 +60,7 @@ export class CatalogStore {
         createdAt: team.createdAt,
         color: team.color,
       })),
-      teamSports: teamSports.map((link) => ({ teamId: link.equipoId, sportId: link.deporteId })),
+      teamSports: teamSports.map((link) => ({ teamId: link.teamId, sportId: link.sportId })),
       players: players.map((player) => ({
         id: player.id,
         fullName: player.fullName,
@@ -83,8 +83,8 @@ export class CatalogStore {
       })),
       contracts: contracts.map((contract) => ({
         id: contract.id,
-        playerId: contract.jugadorId,
-        teamId: contract.equipoId,
+        playerId: contract.playerId,
+        teamId: contract.teamId,
         startDate: contract.startDate,
         endDate: contract.endDate,
         status: contract.status as CatalogState['contracts'][number]['status'],
@@ -99,8 +99,8 @@ export class CatalogStore {
         glyph: skill.glyph,
       })),
       playerSkills: playerSkills.map((link) => ({
-        playerId: link.jugadorId,
-        skillId: link.habilidadId,
+        playerId: link.playerId,
+        skillId: link.skillId,
         score: link.score,
       })),
     };
@@ -121,7 +121,7 @@ export class CatalogStore {
       });
     } catch (error) {
       if (this.isDuplicate(error)) {
-        throw new ConflictException('Ya existe un registro con esos datos.');
+        throw new ConflictException('A record with those values already exists.');
       }
       throw error;
     }
@@ -144,37 +144,37 @@ export class CatalogStore {
     const teams = await this.persistTeams(manager, state);
     const skills = await this.persistSkills(manager, state);
     const players = await this.persistPlayers(manager, state, sports);
-    await manager.createQueryBuilder().update(Vinculacion).set({ activePlayerKey: null }).execute();
-    await this.deleteMissing(manager, Vinculacion, state.contracts.map((contract) => contract.id));
+    await manager.createQueryBuilder().update(Contract).set({ activePlayerKey: null }).execute();
+    await this.deleteMissing(manager, Contract, state.contracts.map((contract) => contract.id));
     const contracts = await this.persistContracts(manager, state, players, teams);
-    await manager.createQueryBuilder().delete().from(EquipoDeporte).execute();
-    await manager.createQueryBuilder().delete().from(JugadorHabilidad).execute();
+    await manager.createQueryBuilder().delete().from(TeamSport).execute();
+    await manager.createQueryBuilder().delete().from(PlayerSkill).execute();
     if (state.teamSports.length) {
       await manager.save(
-        EquipoDeporte,
+        TeamSport,
         state.teamSports.map((link) =>
-          manager.create(EquipoDeporte, {
-            equipoId: teams.get(link.teamId) ?? link.teamId,
-            deporteId: sports.get(link.sportId) ?? link.sportId,
+          manager.create(TeamSport, {
+            teamId: teams.get(link.teamId) ?? link.teamId,
+            sportId: sports.get(link.sportId) ?? link.sportId,
           }),
         ),
       );
     }
     if (state.playerSkills.length) {
       await manager.save(
-        JugadorHabilidad,
+        PlayerSkill,
         state.playerSkills.map((link) =>
-          manager.create(JugadorHabilidad, {
-            jugadorId: players.get(link.playerId) ?? link.playerId,
-            habilidadId: skills.get(link.skillId) ?? link.skillId,
+          manager.create(PlayerSkill, {
+            playerId: players.get(link.playerId) ?? link.playerId,
+            skillId: skills.get(link.skillId) ?? link.skillId,
             score: link.score,
           }),
         ),
       );
     }
-    await this.deleteMissing(manager, Jugador, [...players.values()]);
-    await this.deleteMissing(manager, Habilidad, [...skills.values()]);
-    await this.deleteMissing(manager, Equipo, [...teams.values()]);
+    await this.deleteMissing(manager, Player, [...players.values()]);
+    await this.deleteMissing(manager, Skill, [...skills.values()]);
+    await this.deleteMissing(manager, Team, [...teams.values()]);
     await this.deleteSports(manager, [...sports.values()]);
     return { sports, teams, players, skills, contracts };
   }
@@ -193,11 +193,11 @@ export class CatalogStore {
         createdAt: sport.createdAt,
       };
       if (sport.id > 0) {
-        await manager.save(Deporte, { id: sport.id, ...payload });
+        await manager.save(Sport, { id: sport.id, ...payload });
         map.set(sport.id, sport.id);
         return;
       }
-      const saved = await manager.save(manager.create(Deporte, payload));
+      const saved = await manager.save(manager.create(Sport, payload));
       map.set(sport.id, saved.id);
     };
     for (const sport of state.sports.filter((item) => item.parentId == null)) {
@@ -224,10 +224,10 @@ export class CatalogStore {
         color: team.color,
       };
       if (team.id > 0) {
-        await manager.save(Equipo, { id: team.id, ...payload });
+        await manager.save(Team, { id: team.id, ...payload });
         map.set(team.id, team.id);
       } else {
-        const saved = await manager.save(manager.create(Equipo, payload));
+        const saved = await manager.save(manager.create(Team, payload));
         map.set(team.id, saved.id);
       }
     }
@@ -245,10 +245,10 @@ export class CatalogStore {
         glyph: skill.glyph,
       };
       if (skill.id > 0) {
-        await manager.save(Habilidad, { id: skill.id, ...payload });
+        await manager.save(Skill, { id: skill.id, ...payload });
         map.set(skill.id, skill.id);
       } else {
-        const saved = await manager.save(manager.create(Habilidad, payload));
+        const saved = await manager.save(manager.create(Skill, payload));
         map.set(skill.id, saved.id);
       }
     }
@@ -283,10 +283,10 @@ export class CatalogStore {
         rating: player.stats.rating,
       };
       if (player.id > 0) {
-        await manager.save(Jugador, { id: player.id, ...payload });
+        await manager.save(Player, { id: player.id, ...payload });
         map.set(player.id, player.id);
       } else {
-        const saved = await manager.save(manager.create(Jugador, payload));
+        const saved = await manager.save(manager.create(Player, payload));
         map.set(player.id, saved.id);
       }
     }
@@ -300,24 +300,24 @@ export class CatalogStore {
     teams: Map<number, number>,
   ): Promise<Map<number, number>> {
     const map = new Map<number, number>();
-    const ordered = [...state.contracts].sort((left, right) => Number(right.status !== 'activo') - Number(left.status !== 'activo'));
+    const ordered = [...state.contracts].sort((left, right) => Number(right.status !== 'active') - Number(left.status !== 'active'));
     for (const contract of ordered) {
-      const jugadorId = players.get(contract.playerId) ?? contract.playerId;
+      const playerId = players.get(contract.playerId) ?? contract.playerId;
       const payload = {
-        jugadorId,
-        equipoId: teams.get(contract.teamId) ?? contract.teamId,
+        playerId,
+        teamId: teams.get(contract.teamId) ?? contract.teamId,
         startDate: contract.startDate,
         endDate: contract.endDate,
         status: contract.status,
         endReason: contract.endReason,
         detail: contract.detail,
-        activePlayerKey: contract.status === 'activo' ? jugadorId : null,
+        activePlayerKey: contract.status === 'active' ? playerId : null,
       };
       if (contract.id > 0) {
-        await manager.save(Vinculacion, { id: contract.id, ...payload });
+        await manager.save(Contract, { id: contract.id, ...payload });
         map.set(contract.id, contract.id);
       } else {
-        const saved = await manager.save(manager.create(Vinculacion, payload));
+        const saved = await manager.save(manager.create(Contract, payload));
         map.set(contract.id, saved.id);
       }
     }
@@ -338,9 +338,9 @@ export class CatalogStore {
     const removeChildren = manager
       .createQueryBuilder()
       .delete()
-      .from(Deporte)
+      .from(Sport)
       .where('parent_id IS NOT NULL');
-    const removeParents = manager.createQueryBuilder().delete().from(Deporte).where('parent_id IS NULL');
+    const removeParents = manager.createQueryBuilder().delete().from(Sport).where('parent_id IS NULL');
     if (positive.length === 0) {
       await removeChildren.execute();
       await removeParents.execute();

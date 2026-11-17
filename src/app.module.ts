@@ -8,22 +8,22 @@ import { AnnotationModule } from './annotation/annotation.module';
 import { BetModule } from './bet/bet.module';
 import { CatalogCoreModule } from './catalog/catalog.module';
 import { SecurityGuard } from './common/guards/security.guard';
-import { DeporteModule } from './deporte/deporte.module';
-import { EquipoDeporteModule } from './equipo_deporte/equipo-deporte.module';
-import { EquipoModule } from './equipo/equipo.module';
+import { SportModule } from './sport/sport.module';
+import { TeamSportModule } from './team_sport/team-sport.module';
+import { TeamModule } from './team/team.module';
 import { FanModule } from './fan/fan.module';
-import { HabilidadModule } from './habilidad/habilidad.module';
-import { JugadorHabilidadModule } from './jugador_habilidad/jugador-habilidad.module';
-import { JugadorModule } from './jugador/jugador.module';
+import { SkillModule } from './skill/skill.module';
+import { PlayerSkillModule } from './player_skill/player-skill.module';
+import { PlayerModule } from './player/player.module';
 import { MatchModule } from './match/match.module';
-import { CatalogoDeportivo1763220000000 } from './migrations/1763220000000-CatalogoDeportivo';
+import { SportsCatalog1763220000000 } from './migrations/1763220000000-SportsCatalog';
 import { InitPaymentMethods1794797184631 } from './migrations/1794797184631-InitPaymentMethods';
 import { InitBetting1795100000000 } from './migrations/1795100000000-InitBetting';
 import { AddPaymentMethodType1795200000000 } from './migrations/1795200000000-AddPaymentMethodType';
 import { InitAnnotations1795300000000 } from './migrations/1795300000000-InitAnnotations';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
-import { VinculacionModule } from './vinculacion/vinculacion.module';
+import { ContractModule } from './contract/contract.module';
 
 @Module({
   imports: [
@@ -40,7 +40,7 @@ import { VinculacionModule } from './vinculacion/vinculacion.module';
         charset: 'utf8mb4',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
         migrations: [
-          CatalogoDeportivo1763220000000,
+          SportsCatalog1763220000000,
           InitPaymentMethods1794797184631,
           InitBetting1795100000000,
           AddPaymentMethodType1795200000000,
@@ -53,13 +53,13 @@ import { VinculacionModule } from './vinculacion/vinculacion.module';
     }),
     PaymentMethodModule,
     CatalogCoreModule,
-    DeporteModule,
-    EquipoModule,
-    EquipoDeporteModule,
-    JugadorModule,
-    JugadorHabilidadModule,
-    VinculacionModule,
-    HabilidadModule,
+    SportModule,
+    TeamModule,
+    TeamSportModule,
+    PlayerModule,
+    PlayerSkillModule,
+    ContractModule,
+    SkillModule,
     FanModule,
     MatchModule,
     BetModule,
