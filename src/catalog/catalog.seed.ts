@@ -24,8 +24,7 @@ const SPORTS: SportSeed[] = [
   { key: 'futbol', code: 'DEP-001', name: 'Fútbol', category: 'Ball', description: 'Team sport played between two teams of eleven players each.', status: 'active', createdAt: '2024-01-15' },
   { key: 'baloncesto', code: 'DEP-002', name: 'Baloncesto', category: 'Ball', description: 'Team sport in which players score by shooting the ball through a basket.', status: 'active', createdAt: '2024-02-02' },
   { key: 'voleibol', code: 'DEP-003', name: 'Voleibol', category: 'Net', description: 'Team sport separated by a net where players keep the ball from touching the ground.', status: 'active', createdAt: '2024-02-18' },
-  { key: 'tenis', code: 'DEP-004', name: 'Tenis', category: 'Racket', description: 'Racket sport played in singles or doubles.', status: 'inactive', createdAt: '2024-03-04' },
-  { key: 'natacion', code: 'DEP-005', name: 'Natación', category: 'Aquatic', description: 'Sport focused on endurance and technique in water.', status: 'active', createdAt: '2024-03-20' },
+  { key: 'tenis', code: 'DEP-004', name: 'Tenis', category: 'Racket', description: 'Racket sport played in singles or doubles.', status: 'active', createdAt: '2024-03-04' },
   { key: 'futbol-11', code: 'DEP-006', name: 'Fútbol 11', category: 'Ball', description: 'Subsport of Fútbol.', status: 'active', parent: 'futbol', createdAt: '2024-01-15' },
   { key: 'futbol-salon', code: 'DEP-007', name: 'Fútbol de salón', category: 'Ball', description: 'Subsport of Fútbol.', status: 'active', parent: 'futbol', createdAt: '2024-01-15' },
   { key: 'futbol-callejero', code: 'DEP-008', name: 'Fútbol callejero', category: 'Ball', description: 'Subsport of Fútbol.', status: 'active', parent: 'futbol', createdAt: '2024-01-15' },
@@ -36,9 +35,8 @@ const SPORTS: SportSeed[] = [
   { key: 'voleibol-pista', code: 'DEP-013', name: 'Voleibol de pista', category: 'Net', description: 'Subsport of Voleibol.', status: 'active', parent: 'voleibol', createdAt: '2024-02-18' },
   { key: 'voleibol-playa', code: 'DEP-014', name: 'Voleibol de playa', category: 'Net', description: 'Subsport of Voleibol.', status: 'active', parent: 'voleibol', createdAt: '2024-02-18' },
   { key: 'voleibol-sala', code: 'DEP-015', name: 'Voleibol de sala', category: 'Net', description: 'Subsport of Voleibol.', status: 'active', parent: 'voleibol', createdAt: '2024-02-18' },
-  { key: 'tenis-singles', code: 'DEP-016', name: 'Tenis individual', category: 'Racket', description: 'Subsport of Tenis.', status: 'inactive', parent: 'tenis', createdAt: '2024-03-04' },
-  { key: 'tenis-dobles', code: 'DEP-017', name: 'Tenis dobles', category: 'Racket', description: 'Subsport of Tenis.', status: 'inactive', parent: 'tenis', createdAt: '2024-03-04' },
-  { key: 'natacion-libre', code: 'DEP-018', name: 'Natación libre', category: 'Aquatic', description: 'Subsport of Natación.', status: 'active', parent: 'natacion', createdAt: '2024-03-20' },
+  { key: 'tenis-singles', code: 'DEP-016', name: 'Tenis individual', category: 'Racket', description: 'Subsport of Tenis.', status: 'active', parent: 'tenis', createdAt: '2024-03-04' },
+  { key: 'tenis-dobles', code: 'DEP-017', name: 'Tenis dobles', category: 'Racket', description: 'Subsport of Tenis.', status: 'active', parent: 'tenis', createdAt: '2024-03-04' },
 ];
 
 const TEAMS = [
