@@ -4,15 +4,20 @@ import { APP_GUARD } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
+import { BetModule } from './bet/bet.module';
 import { CatalogCoreModule } from './catalog/catalog.module';
 import { SecurityGuard } from './common/guards/security.guard';
 import { DeporteModule } from './deporte/deporte.module';
 import { EquipoDeporteModule } from './equipo_deporte/equipo-deporte.module';
 import { EquipoModule } from './equipo/equipo.module';
+import { FanModule } from './fan/fan.module';
 import { HabilidadModule } from './habilidad/habilidad.module';
 import { JugadorHabilidadModule } from './jugador_habilidad/jugador-habilidad.module';
 import { JugadorModule } from './jugador/jugador.module';
+import { MatchModule } from './match/match.module';
 import { CatalogoDeportivo1763220000000 } from './migrations/1763220000000-CatalogoDeportivo';
+import { InitBetting1795100000000 } from './migrations/1795100000000-InitBetting';
+import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
 import { VinculacionModule } from './vinculacion/vinculacion.module';
 
@@ -30,7 +35,7 @@ import { VinculacionModule } from './vinculacion/vinculacion.module';
         database: configService.get<string>('DB_NAME'),
         charset: 'utf8mb4',
         entities: [__dirname + '/**/*.entity{.ts,.js}'],
-        migrations: [CatalogoDeportivo1763220000000],
+        migrations: [CatalogoDeportivo1763220000000, InitBetting1795100000000],
         migrationsRun: true,
         migrationsTableName: 'sport_migrations',
         synchronize: false,
@@ -45,6 +50,10 @@ import { VinculacionModule } from './vinculacion/vinculacion.module';
     JugadorHabilidadModule,
     VinculacionModule,
     HabilidadModule,
+    FanModule,
+    MatchModule,
+    BetModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
   providers: [
