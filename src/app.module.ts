@@ -21,9 +21,11 @@ import { InitPaymentMethods1794797184631 } from './migrations/1794797184631-Init
 import { InitBetting1795100000000 } from './migrations/1795100000000-InitBetting';
 import { AddPaymentMethodType1795200000000 } from './migrations/1795200000000-AddPaymentMethodType';
 import { InitAnnotations1795300000000 } from './migrations/1795300000000-InitAnnotations';
+import { InitMatchTracking1795400000000 } from './migrations/1795400000000-InitMatchTracking';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
 import { ContractModule } from './contract/contract.module';
+import { MatchTrackingModule } from './match/tracking/match-tracking.module';
 
 @Module({
   imports: [
@@ -45,6 +47,7 @@ import { ContractModule } from './contract/contract.module';
           InitBetting1795100000000,
           AddPaymentMethodType1795200000000,
           InitAnnotations1795300000000,
+          InitMatchTracking1795400000000,
         ],
         migrationsRun: true,
         migrationsTableName: 'sport_migrations',
@@ -62,6 +65,7 @@ import { ContractModule } from './contract/contract.module';
     SkillModule,
     FanModule,
     MatchModule,
+    MatchTrackingModule,
     BetModule,
     NotificationsModule,
     AnnotationModule,
