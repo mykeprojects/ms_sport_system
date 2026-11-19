@@ -23,6 +23,25 @@ export class Match {
   @Column({ name: 'sport_id', type: 'int', nullable: true })
   sportId: number | null;
 
+  /** Optional scheduling links managed by HU-GC-06. */
+  @Column({ name: 'tournament_id', type: 'int', nullable: true })
+  tournamentId: number | null;
+
+  @Column({ name: 'phase_id', type: 'int', nullable: true })
+  phaseId: number | null;
+
+  @Column({ name: 'bracket_id', type: 'int', nullable: true })
+  bracketId: number | null;
+
+  @Column({ name: 'group_id', type: 'int', nullable: true })
+  groupId: number | null;
+
+  @Column({ type: 'varchar', length: 160, nullable: true })
+  venue: string | null;
+
+  @Column({ name: 'round_label', type: 'varchar', length: 40, nullable: true })
+  roundLabel: string | null;
+
   @Column({ name: 'scheduled_at', type: 'datetime', nullable: true })
   scheduledAt: Date | null;
 

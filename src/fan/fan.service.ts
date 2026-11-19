@@ -17,6 +17,7 @@ import { FanPaymentMethod } from './entities/fan-payment-method.entity';
 import { FAN_IDENTITY_RESOLVER } from './identity/fan-identity.service';
 import type { FanContext, IFanIdentityResolver } from './identity/fan-identity.service';
 import { FanMapper } from './mappers/fan.mapper';
+import { FanProvisioningService } from './provisioning/fan-provisioning.service';
 
 @Injectable()
 export class FanService {
@@ -32,6 +33,7 @@ export class FanService {
     @Inject(FAN_IDENTITY_RESOLVER)
     private readonly identityResolver: IFanIdentityResolver,
     private readonly mapper: FanMapper,
+    private readonly provisioningService: FanProvisioningService,
   ) {}
 
   /**
@@ -40,9 +42,9 @@ export class FanService {
    * validated the token), so remote profile loading is best effort enrichment.
    */
   async ensureRegistered(context: FanContext): Promise<Fan> {
-    const existing = await this.fanRepository.findOne({
-      where: { externalUserId: context.externalUserId },
-    });
+    const existing = await this.provisioningService.findByExternalUserId(
+      context.externalUserId,
+    );
     if (existing) {
       if (!existing.email && context.email) {
         existing.email = context.email;
@@ -52,12 +54,11 @@ export class FanService {
     }
 
     const remote = await this.identityResolver.fetchRemoteProfile(context);
-    const fan = this.fanRepository.create({
+    const saved = await this.provisioningService.provision({
       externalUserId: context.externalUserId,
       email: remote?.email ?? context.email ?? null,
       fullName: remote?.fullName ?? null,
     });
-    const saved = await this.fanRepository.save(fan);
     this.logger.log(`Registered fan ${saved.id} for external user ${saved.externalUserId}`);
     return saved;
   }
