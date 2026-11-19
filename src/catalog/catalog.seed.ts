@@ -8,6 +8,9 @@ import { Skill } from '../skill/entities/skill.entity';
 import { Player } from '../player/entities/player.entity';
 import { PlayerSkill } from '../player_skill/entities/player-skill.entity';
 import { Contract } from '../contract/entities/contract.entity';
+import { Match } from '../match/entities/match.entity';
+import { PaymentMethod } from '../payment_method/entities/payment_method.entity';
+import { PaymentMethodType } from '../payment_method/payment-method.constants';
 
 type SportSeed = {
   key: string;
@@ -242,6 +245,70 @@ export async function seedCatalog(manager: EntityManager): Promise<void> {
   );
 }
 
+async function seedOperationalExamples(manager: EntityManager): Promise<void> {
+  const paymentMethods = [
+    {
+      name: 'Tarjeta de crédito',
+      description: 'Pago con tarjeta de crédito o débito.',
+      type: PaymentMethodType.CARD,
+    },
+    {
+      name: 'Cuenta bancaria',
+      description: 'Pago desde una cuenta bancaria.',
+      type: PaymentMethodType.BANK_ACCOUNT,
+    },
+    {
+      name: 'Billetera digital',
+      description: 'Pago mediante una billetera digital.',
+      type: PaymentMethodType.DIGITAL_WALLET,
+    },
+  ];
+
+  for (const paymentMethod of paymentMethods) {
+    const existing = await manager.findOneBy(PaymentMethod, { name: paymentMethod.name });
+    if (!existing) {
+      await manager.save(manager.create(PaymentMethod, { ...paymentMethod, is_active: true }));
+    }
+  }
+
+  const [homeTeam, awayTeam, football] = await Promise.all([
+    manager.findOneBy(Team, { code: 'EQ-001' }),
+    manager.findOneBy(Team, { code: 'EQ-002' }),
+    manager.findOneBy(Sport, { code: 'DEP-001' }),
+  ]);
+  if (!homeTeam || !awayTeam || !football) return;
+
+  const existingMatch = await manager.findOneBy(Match, {
+    homeTeamId: homeTeam.id,
+    awayTeamId: awayTeam.id,
+    sportId: football.id,
+  });
+  if (existingMatch) return;
+
+  const startsAt = new Date();
+  startsAt.setDate(startsAt.getDate() + 7);
+  startsAt.setHours(19, 0, 0, 0);
+
+  await manager.save(
+    manager.create(Match, {
+      homeTeam: homeTeam.name,
+      awayTeam: awayTeam.name,
+      homeTeamId: homeTeam.id,
+      awayTeamId: awayTeam.id,
+      sportId: football.id,
+      scheduledAt: startsAt,
+      startsAt,
+      bettingClosesAt: new Date(startsAt.getTime() - 15 * 60 * 1000),
+      status: 'SCHEDULED',
+      bettingEnabled: true,
+      officialResult: null,
+      homeOdd: 2.1,
+      awayOdd: 3.2,
+      drawOdd: 2.8,
+    }),
+  );
+}
+
 @Injectable()
 export class CatalogSeedService implements OnModuleInit {
   private readonly logger = new Logger(CatalogSeedService.name);
@@ -251,8 +318,11 @@ export class CatalogSeedService implements OnModuleInit {
   async onModuleInit(): Promise<void> {
     if (process.env.SEED_CATALOG === 'false') return;
     const existing = await this.dataSource.getRepository(Sport).count();
-    if (existing > 0) return;
-    await this.dataSource.transaction((manager) => seedCatalog(manager));
-    this.logger.log('Sample sports catalog loaded.');
+    if (existing === 0) {
+      await this.dataSource.transaction((manager) => seedCatalog(manager));
+      this.logger.log('Sample sports catalog loaded.');
+    }
+    await this.dataSource.transaction((manager) => seedOperationalExamples(manager));
+    this.logger.log('Sample matches and payment methods ensured.');
   }
 }
