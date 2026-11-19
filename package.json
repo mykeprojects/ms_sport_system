@@ -26,11 +26,8 @@
     "@nestjs/core": "^12.0.1",
     "@nestjs/mapped-types": "^12.0.1",
     "@nestjs/platform-express": "^12.0.1",
-<<<<<<< HEAD
     "@nestjs/schedule": "^12.0.4",
-=======
     "@nestjs/platform-socket.io": "^12.5.1",
->>>>>>> bf653128413c065b5e56e53ad0214fb1c5e09d35
     "@nestjs/typeorm": "^12.0.3",
     "@nestjs/websockets": "^12.5.1",
     "axios": "^1.21.1",
