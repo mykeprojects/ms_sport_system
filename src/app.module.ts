@@ -22,9 +22,11 @@ import { InitPaymentMethods1794797184631 } from './migrations/1794797184631-Init
 import { InitBetting1795100000000 } from './migrations/1795100000000-InitBetting';
 import { AddPaymentMethodType1795200000000 } from './migrations/1795200000000-AddPaymentMethodType';
 import { InitAnnotations1795300000000 } from './migrations/1795300000000-InitAnnotations';
+import { InitMatchTracking1795400000000 } from './migrations/1795400000000-InitMatchTracking';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
 import { ContractModule } from './contract/contract.module';
+<<<<<<< HEAD
 import { TournamentModule } from './tournament/tournament.module';
 import { InitTournaments1795400000000 } from './migrations/1795400000000-InitTournaments';
 import { TournamentRegistrationModule } from './tournament_registration/tournament-registration.module';
@@ -39,6 +41,9 @@ import { AddMatchScheduling1795900000000 } from './migrations/1795900000000-AddM
 import { InitFanFollowedTeams1796000000000 } from './migrations/1796000000000-InitFanFollowedTeams';
 import { InitMatchReminderDeliveries1796100000000 } from './migrations/1796100000000-InitMatchReminderDeliveries';
 import { TournamentDevelopmentModule } from './tournament_development/tournament-development.module';
+=======
+import { MatchTrackingModule } from './match/tracking/match-tracking.module';
+>>>>>>> bf653128413c065b5e56e53ad0214fb1c5e09d35
 
 @Module({
   imports: [
@@ -61,6 +66,7 @@ import { TournamentDevelopmentModule } from './tournament_development/tournament
           InitBetting1795100000000,
           AddPaymentMethodType1795200000000,
           InitAnnotations1795300000000,
+<<<<<<< HEAD
           InitTournaments1795400000000,
           InitTournamentRegistrations1795500000000,
           InitTournamentPhases1795600000000,
@@ -69,6 +75,9 @@ import { TournamentDevelopmentModule } from './tournament_development/tournament
           AddMatchScheduling1795900000000,
           InitFanFollowedTeams1796000000000,
           InitMatchReminderDeliveries1796100000000,
+=======
+          InitMatchTracking1795400000000,
+>>>>>>> bf653128413c065b5e56e53ad0214fb1c5e09d35
         ],
         migrationsRun: true,
         migrationsTableName: 'sport_migrations',
@@ -92,6 +101,7 @@ import { TournamentDevelopmentModule } from './tournament_development/tournament
     SkillModule,
     FanModule,
     MatchModule,
+    MatchTrackingModule,
     BetModule,
     NotificationsModule,
     AnnotationModule,
