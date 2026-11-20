@@ -57,6 +57,22 @@ $ npm run test:e2e
 $ npm run test:cov
 ```
 
+## Datos iniciales de desarrollo
+
+Al iniciar, `CatalogSeedService` carga el catálogo de deportes, equipos,
+jugadores, contratos y habilidades cuando la tabla de deportes está vacía.
+También asegura métodos de pago de ejemplo y, si existen los equipos `EQ-001`,
+`EQ-002` y el deporte `DEP-001`, un partido futuro entre ellos. La comprobación
+de cada dato hace que los reinicios no dupliquen esos ejemplos.
+
+El seeder no crea aficionados, métodos de pago personales ni apuestas: esos
+datos pertenecen a una cuenta autenticada y se generan mediante los endpoints
+correspondientes. Las rutas que requieren autorización deben estar registradas
+como permisos en `ms_security_tournament`.
+
+Para omitir la carga de datos de ejemplo, define `SEED_CATALOG=false` antes de
+iniciar el servicio. Las migraciones de esquema siguen ejecutándose.
+
 ## Deployment
 
 When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.

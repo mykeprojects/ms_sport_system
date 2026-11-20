@@ -13,6 +13,8 @@ export abstract class MatchTrackingPositionStore {
   abstract updatePlayer(matchId: number, playerId: number, x: number, y: number): Promise<PositionUpdate>;
   abstract updateBall(matchId: number, x: number, y: number): Promise<PositionUpdate>;
   abstract history(matchId: number): Promise<PositionUpdate[]>;
+  abstract pause(matchId: number): Promise<TrackingBoard>;
+  abstract resume(matchId: number): Promise<TrackingBoard>;
   abstract stop(matchId: number): Promise<TrackingBoard>;
 }
 

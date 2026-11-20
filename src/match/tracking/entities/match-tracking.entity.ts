@@ -24,7 +24,7 @@ export class MatchTrackingSession {
   fieldHeight: number;
 
   @Column({ length: 20, default: 'RUNNING' })
-  status: 'RUNNING' | 'STOPPED';
+  status: 'RUNNING' | 'PAUSED' | 'STOPPED';
 
   @CreateDateColumn({ name: 'started_at', type: 'timestamp' })
   startedAt: Date;
