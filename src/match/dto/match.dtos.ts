@@ -37,6 +37,36 @@ export class CreateMatchDto {
   sportId?: number;
 
   @IsOptional()
+  @IsInt()
+  @Min(1)
+  tournamentId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  phaseId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  bracketId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  groupId?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  venue?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  roundLabel?: string;
+
+  @IsOptional()
   @IsDateString()
   scheduledAt?: string;
 
@@ -96,6 +126,36 @@ export class UpdateMatchDto {
   @IsInt()
   @Min(1)
   sportId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  tournamentId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  phaseId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  bracketId?: number;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  groupId?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(160)
+  venue?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(40)
+  roundLabel?: string;
 
   @IsOptional()
   @IsDateString()

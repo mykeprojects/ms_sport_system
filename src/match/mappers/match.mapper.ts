@@ -20,6 +20,12 @@ export class MatchMapper {
     entity.homeTeamId = dto.homeTeamId;
     entity.awayTeamId = dto.awayTeamId;
     entity.sportId = dto.sportId ?? null;
+    entity.tournamentId = dto.tournamentId ?? null;
+    entity.phaseId = dto.phaseId ?? null;
+    entity.bracketId = dto.bracketId ?? null;
+    entity.groupId = dto.groupId ?? null;
+    entity.venue = dto.venue?.trim() || null;
+    entity.roundLabel = dto.roundLabel?.trim() || null;
     entity.scheduledAt = dto.scheduledAt ? new Date(dto.scheduledAt) : null;
     entity.startsAt = new Date(dto.startsAt);
     entity.bettingClosesAt = dto.bettingClosesAt
@@ -40,6 +46,12 @@ export class MatchMapper {
     if (dto.homeTeamId !== undefined) entity.homeTeamId = dto.homeTeamId;
     if (dto.awayTeamId !== undefined) entity.awayTeamId = dto.awayTeamId;
     if (dto.sportId !== undefined) entity.sportId = dto.sportId;
+    if (dto.tournamentId !== undefined) entity.tournamentId = dto.tournamentId;
+    if (dto.phaseId !== undefined) entity.phaseId = dto.phaseId;
+    if (dto.bracketId !== undefined) entity.bracketId = dto.bracketId;
+    if (dto.groupId !== undefined) entity.groupId = dto.groupId;
+    if (dto.venue !== undefined) entity.venue = dto.venue.trim() || null;
+    if (dto.roundLabel !== undefined) entity.roundLabel = dto.roundLabel.trim() || null;
     if (dto.scheduledAt !== undefined) entity.scheduledAt = new Date(dto.scheduledAt);
     if (dto.startsAt !== undefined) entity.startsAt = new Date(dto.startsAt);
     if (dto.bettingClosesAt !== undefined) entity.bettingClosesAt = new Date(dto.bettingClosesAt);

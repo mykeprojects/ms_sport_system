@@ -8,6 +8,12 @@ export class MatchResponseDto {
   homeTeamId!: number;
   awayTeamId!: number;
   sportId!: number | null;
+  tournamentId!: number | null;
+  phaseId!: number | null;
+  bracketId!: number | null;
+  groupId!: number | null;
+  venue!: string | null;
+  roundLabel!: string | null;
   scheduledAt!: Date | null;
   startsAt!: Date;
   bettingClosesAt!: Date;
@@ -29,6 +35,12 @@ export function toMatchResponse(match: Match): MatchResponseDto {
     homeTeamId: match.homeTeamId,
     awayTeamId: match.awayTeamId,
     sportId: match.sportId,
+    tournamentId: match.tournamentId,
+    phaseId: match.phaseId,
+    bracketId: match.bracketId,
+    groupId: match.groupId,
+    venue: match.venue,
+    roundLabel: match.roundLabel,
     scheduledAt: match.scheduledAt,
     startsAt: match.startsAt,
     bettingClosesAt: match.bettingClosesAt,
