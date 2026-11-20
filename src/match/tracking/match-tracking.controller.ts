@@ -41,6 +41,16 @@ export class MatchTrackingController {
     return this.tracking.updateBall(matchId, dto);
   }
 
+  @Post('pause')
+  pause(@Param('matchId', ParseIntPipe) matchId: number) {
+    return this.tracking.pause(matchId);
+  }
+
+  @Post('resume')
+  resume(@Param('matchId', ParseIntPipe) matchId: number) {
+    return this.tracking.resume(matchId);
+  }
+
   @Post('stop')
   stop(@Param('matchId', ParseIntPipe) matchId: number) {
     return this.tracking.stop(matchId);

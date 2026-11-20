@@ -159,8 +159,30 @@ export class TypeOrmMatchTrackingStore extends MatchTrackingPositionStore {
     return rows.map((row) => this.toUpdate(row));
   }
 
-  async stop(matchId: number): Promise<TrackingBoard> {
+  async pause(matchId: number): Promise<TrackingBoard> {
     const session = await this.requireRunning(matchId);
+    session.status = 'PAUSED';
+    await this.sessions.save(session);
+    return this.buildBoard(session);
+  }
+
+  async resume(matchId: number): Promise<TrackingBoard> {
+    const session = await this.sessions.findOne({ where: { matchId } });
+    if (!session) throw new NotFoundException('The match tracking session was not started.');
+    if (session.status !== 'PAUSED') {
+      throw new ConflictException('The match tracking session is not paused.');
+    }
+    session.status = 'RUNNING';
+    await this.sessions.save(session);
+    return this.buildBoard(session);
+  }
+
+  async stop(matchId: number): Promise<TrackingBoard> {
+    const session = await this.sessions.findOne({ where: { matchId } });
+    if (!session) throw new NotFoundException('The match tracking session was not started.');
+    if (session.status === 'STOPPED') {
+      throw new ConflictException('The match tracking session is stopped.');
+    }
     session.status = 'STOPPED';
     session.endedAt = new Date();
     await this.sessions.save(session);
@@ -170,7 +192,13 @@ export class TypeOrmMatchTrackingStore extends MatchTrackingPositionStore {
   private async requireRunning(matchId: number): Promise<MatchTrackingSession> {
     const session = await this.sessions.findOne({ where: { matchId } });
     if (!session) throw new NotFoundException('The match tracking session was not started.');
-    if (session.status !== 'RUNNING') throw new ConflictException('The match tracking session is stopped.');
+    if (session.status !== 'RUNNING') {
+      throw new ConflictException(
+        session.status === 'PAUSED'
+          ? 'The match tracking session is paused.'
+          : 'The match tracking session is stopped.',
+      );
+    }
     return session;
   }
 

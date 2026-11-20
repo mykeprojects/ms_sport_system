@@ -1,4 +1,4 @@
-import { BadRequestException, ConflictException, Injectable, OnModuleDestroy } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, OnModuleDestroy } from '@nestjs/common';
 import { CatalogStore } from '../../catalog/catalog.store';
 import { MatchService } from '../match.service';
 import type { StartMatchTrackingDto, UpdateBallPositionDto, UpdatePositionDto } from './dto/tracking.dto';
@@ -7,10 +7,14 @@ import {
   MatchTrackingPublisher,
   MatchTrackingSimulator,
 } from './match-tracking.ports';
+import type { PositionUpdate } from './match-tracking.types';
 
 @Injectable()
 export class MatchTrackingService implements OnModuleDestroy {
   private readonly intervals = new Map<number, ReturnType<typeof setInterval>>();
+  private readonly simulations = new Set<number>();
+  private readonly pausedMatches = new Set<number>();
+  private readonly logger = new Logger(MatchTrackingService.name);
 
   constructor(
     private readonly matches: MatchService,
@@ -50,6 +54,12 @@ export class MatchTrackingService implements OnModuleDestroy {
     if (board.status === 'STOPPED') {
       throw new ConflictException('The match tracking session is stopped.');
     }
+    if (board.status === 'PAUSED') {
+      this.pausedMatches.add(matchId);
+      this.publisher.publish(matchId, board);
+      return board;
+    }
+    this.pausedMatches.delete(matchId);
     this.publisher.publish(matchId, board);
     this.startSimulation(matchId, dto.simulationIntervalMs ?? 1000);
     return board;
@@ -57,13 +67,13 @@ export class MatchTrackingService implements OnModuleDestroy {
 
   async updatePlayer(matchId: number, playerId: number, dto: UpdatePositionDto) {
     const update = await this.store.updatePlayer(matchId, playerId, dto.x, dto.y);
-    this.publisher.publish(matchId, update);
+    this.publishPosition(matchId, update);
     return this.store.findSession(matchId);
   }
 
   async updateBall(matchId: number, dto: UpdateBallPositionDto) {
     const update = await this.store.updateBall(matchId, dto.x, dto.y);
-    this.publisher.publish(matchId, update);
+    this.publishPosition(matchId, update);
     return this.store.findSession(matchId);
   }
 
@@ -71,38 +81,85 @@ export class MatchTrackingService implements OnModuleDestroy {
     return this.store.history(matchId);
   }
 
-  async stop(matchId: number) {
-    const board = await this.store.stop(matchId);
-    this.clearSimulation(matchId);
+  async pause(matchId: number) {
+    const wasPaused = this.pausedMatches.has(matchId);
+    this.pausedMatches.add(matchId);
+    try {
+      const board = await this.store.pause(matchId);
+      this.publisher.publish(matchId, board);
+      return board;
+    } catch (error) {
+      if (!wasPaused) this.pausedMatches.delete(matchId);
+      throw error;
+    }
+  }
+
+  async resume(matchId: number) {
+    const board = await this.store.resume(matchId);
+    this.pausedMatches.delete(matchId);
     this.publisher.publish(matchId, board);
+    if (!this.intervals.has(matchId)) this.startSimulation(matchId, 1000);
     return board;
+  }
+
+  async stop(matchId: number) {
+    const wasPaused = this.pausedMatches.has(matchId);
+    this.pausedMatches.add(matchId);
+    try {
+      const board = await this.store.stop(matchId);
+      this.clearSimulation(matchId);
+      this.publisher.publish(matchId, board);
+      return board;
+    } catch (error) {
+      if (!wasPaused) this.pausedMatches.delete(matchId);
+      throw error;
+    }
   }
 
   onModuleDestroy(): void {
     for (const [matchId] of this.intervals) this.clearSimulation(matchId);
+    this.pausedMatches.clear();
   }
 
   private startSimulation(matchId: number, intervalMs: number): void {
     this.clearSimulation(matchId);
     const interval = setInterval(() => {
-      void this.simulate(matchId);
+      if (this.simulations.has(matchId)) return;
+      this.simulations.add(matchId);
+      void this.simulate(matchId)
+        .catch((error: unknown) => {
+          if (this.pausedMatches.has(matchId) && error instanceof ConflictException) return;
+          this.logger.error(
+            `Unable to simulate positions for match #${matchId}`,
+            error instanceof Error ? error.stack : String(error),
+          );
+        })
+        .finally(() => this.simulations.delete(matchId));
     }, intervalMs);
     this.intervals.set(matchId, interval);
   }
 
   private async simulate(matchId: number): Promise<void> {
+    if (this.pausedMatches.has(matchId)) return;
     const board = await this.store.findSession(matchId);
-    if (!board || board.status !== 'RUNNING') {
+    if (!board || board.status === 'STOPPED') {
       this.clearSimulation(matchId);
       return;
     }
+    if (board.status === 'PAUSED' || this.pausedMatches.has(matchId)) return;
     const next = this.simulator.next(board);
     for (const [playerId, position] of next.players) {
+      if (this.pausedMatches.has(matchId)) return;
       const update = await this.store.updatePlayer(matchId, playerId, position.x, position.y);
-      this.publisher.publish(matchId, update);
+      this.publishPosition(matchId, update);
     }
+    if (this.pausedMatches.has(matchId)) return;
     const ball = await this.store.updateBall(matchId, next.ball.x, next.ball.y);
-    this.publisher.publish(matchId, ball);
+    this.publishPosition(matchId, ball);
+  }
+
+  private publishPosition(matchId: number, update: PositionUpdate): void {
+    if (!this.pausedMatches.has(matchId)) this.publisher.publish(matchId, update);
   }
 
   private clearSimulation(matchId: number): void {

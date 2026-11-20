@@ -5,7 +5,7 @@ export class InitMatchTracking1795450000000 implements MigrationInterface {
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-      CREATE TABLE match_tracking_sessions (
+      CREATE TABLE IF NOT EXISTS match_tracking_sessions (
         id INT NOT NULL AUTO_INCREMENT,
         match_id INT NOT NULL,
         sport_id INT NULL,
@@ -25,7 +25,7 @@ export class InitMatchTracking1795450000000 implements MigrationInterface {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     await queryRunner.query(`
-      CREATE TABLE match_tracking_players (
+      CREATE TABLE IF  NOT EXISTS match_tracking_players (
         id INT NOT NULL AUTO_INCREMENT,
         session_id INT NOT NULL,
         match_id INT NOT NULL,
@@ -45,7 +45,7 @@ export class InitMatchTracking1795450000000 implements MigrationInterface {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     await queryRunner.query(`
-      CREATE TABLE match_tracking_balls (
+      CREATE TABLE IF NOT EXISTS match_tracking_balls (
         id INT NOT NULL AUTO_INCREMENT,
         session_id INT NOT NULL,
         match_id INT NOT NULL,
@@ -60,7 +60,7 @@ export class InitMatchTracking1795450000000 implements MigrationInterface {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     `);
     await queryRunner.query(`
-      CREATE TABLE match_tracking_positions (
+      CREATE TABLE IF NOT EXISTS match_tracking_positions (
         id BIGINT NOT NULL AUTO_INCREMENT,
         session_id INT NOT NULL,
         match_id INT NOT NULL,
