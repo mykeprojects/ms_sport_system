@@ -1,7 +1,7 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
-export class InitMatchTracking1795400000000 implements MigrationInterface {
-  name = 'InitMatchTracking1795400000000';
+export class InitMatchTracking1795450000000 implements MigrationInterface {
+  name = 'InitMatchTracking1795450000000';
 
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`

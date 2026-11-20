@@ -33,8 +33,12 @@ export class SecurityGuard implements CanActivate {
     ]);
     if (isPublic) return true;
 
+    if (context.getType() !== 'http') {
+      return true;
+    }
+
     const request = context.switchToHttp().getRequest<Request>();
-    const token = this.extractBearerToken(request.headers.authorization);
+    const token = this.extractBearerToken(request.headers?.authorization);
 
     const securityBaseUrl = this.configService.get<string>('MS_SECURITY');
     if (!securityBaseUrl) {

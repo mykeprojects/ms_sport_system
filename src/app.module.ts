@@ -22,12 +22,12 @@ import { InitPaymentMethods1794797184631 } from './migrations/1794797184631-Init
 import { InitBetting1795100000000 } from './migrations/1795100000000-InitBetting';
 import { AddPaymentMethodType1795200000000 } from './migrations/1795200000000-AddPaymentMethodType';
 import { InitAnnotations1795300000000 } from './migrations/1795300000000-InitAnnotations';
-import { InitMatchTracking1795400000000 } from './migrations/1795400000000-InitMatchTracking';
+import { InitTournaments1795400000000 } from './migrations/1795400000000-InitTournaments';
+import { InitMatchTracking1795450000000 } from './migrations/1795450000000-InitMatchTracking';
 import { NotificationsModule } from './notifications/notifications.module';
 import { PaymentMethodModule } from './payment_method/payment_method.module';
 import { ContractModule } from './contract/contract.module';
 import { TournamentModule } from './tournament/tournament.module';
-import { InitTournaments1795400000000 } from './migrations/1795400000000-InitTournaments';
 import { TournamentRegistrationModule } from './tournament_registration/tournament-registration.module';
 import { InitTournamentRegistrations1795500000000 } from './migrations/1795500000000-InitTournamentRegistrations';
 import { TournamentPhaseModule } from './tournament_phase/tournament-phase.module';
@@ -65,6 +65,7 @@ import { MatchTrackingModule } from './match/tracking/match-tracking.module';
           AddPaymentMethodType1795200000000,
           InitAnnotations1795300000000,
           InitTournaments1795400000000,
+          InitMatchTracking1795450000000,
           InitTournamentRegistrations1795500000000,
           InitTournamentPhases1795600000000,
           InitTournamentGroups1795700000000,
@@ -72,7 +73,6 @@ import { MatchTrackingModule } from './match/tracking/match-tracking.module';
           AddMatchScheduling1795900000000,
           InitFanFollowedTeams1796000000000,
           InitMatchReminderDeliveries1796100000000,
-          InitMatchTracking1795400000000,
         ],
         migrationsRun: true,
         migrationsTableName: 'sport_migrations',
