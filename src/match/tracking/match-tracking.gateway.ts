@@ -7,9 +7,11 @@ import {
   WebSocketServer,
 } from '@nestjs/websockets';
 import type { Server, Socket } from 'socket.io';
+import { Public } from '../../common/decorators/public.decorator';
 import { MatchTrackingPublisher } from './match-tracking.ports';
 import type { PositionUpdate, TrackingBoard } from './match-tracking.types';
 
+@Public()
 @Injectable()
 @WebSocketGateway({ namespace: '/tracking', cors: { origin: '*' } })
 export class MatchTrackingGateway extends MatchTrackingPublisher {
