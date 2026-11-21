@@ -57,6 +57,20 @@ describe('MatchTrackingService', () => {
     jest.useRealTimers();
   });
 
+  it('rejects tracking before the match is started', async () => {
+    const service = new MatchTrackingService(
+      { getEntity: jest.fn().mockResolvedValue({ status: 'SCHEDULED', sportId: 1 }) } as unknown as MatchService,
+      { load: jest.fn().mockResolvedValue({ sports: [{ id: 1, name: 'Fútbol' }] }) } as unknown as CatalogStore,
+      {} as MatchTrackingPositionStore,
+      {} as MatchTrackingSimulator,
+      { publish: jest.fn() } as MatchTrackingPublisher,
+    );
+
+    await expect(service.start(1, {})).rejects.toThrow(
+      'The match must be started before spatial tracking can begin.',
+    );
+  });
+
   it('stores and publishes simulated positions automatically after tracking starts', async () => {
     jest.useFakeTimers();
     const board: TrackingBoard = {

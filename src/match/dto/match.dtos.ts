@@ -10,7 +10,7 @@ import {
   MaxLength,
   Min,
 } from 'class-validator';
-import { MATCH_STATUSES, OFFICIAL_RESULTS } from '../match.constants';
+import { MATCH_STATUSES } from '../match.constants';
 
 export class CreateMatchDto {
   @IsString()
@@ -193,7 +193,3 @@ export class UpdateMatchDto {
   drawOdd?: number;
 }
 
-export class RegisterResultDto {
-  @IsIn(OFFICIAL_RESULTS, { message: 'Invalid official result.' })
-  officialResult!: (typeof OFFICIAL_RESULTS)[number];
-}

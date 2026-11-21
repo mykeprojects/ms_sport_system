@@ -10,7 +10,7 @@ import {
   Post,
   Query,
 } from '@nestjs/common';
-import { CreateMatchDto, RegisterResultDto, UpdateMatchDto } from './dto/match.dtos';
+import { CreateMatchDto, UpdateMatchDto } from './dto/match.dtos';
 import { MatchNotificationService } from './match-notification.service';
 import { MatchService } from './match.service';
 import type { MatchStatus } from './match.constants';
@@ -61,9 +61,16 @@ export class MatchController {
     return this.matchService.update(id, dto);
   }
 
-  @Patch(':id/result')
-  registerResult(@Param('id', ParseIntPipe) id: number, @Body() dto: RegisterResultDto) {
-    return this.matchService.registerResult(id, dto);
+  @Post(':id/start')
+  @HttpCode(200)
+  start(@Param('id', ParseIntPipe) id: number) {
+    return this.matchService.start(id);
+  }
+
+  @Post(':id/finish')
+  @HttpCode(200)
+  finish(@Param('id', ParseIntPipe) id: number) {
+    return this.matchService.finish(id);
   }
 
   @Delete(':id')

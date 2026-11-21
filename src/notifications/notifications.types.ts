@@ -25,6 +25,7 @@ export type MatchNotificationType =
   | 'MATCH_CREATED'
   | 'MATCH_UPDATED'
   | 'MATCH_CANCELLED'
+  | 'MATCH_FINISHED'
   | 'MATCH_REMINDER';
 
 export interface MatchNotificationPayload {

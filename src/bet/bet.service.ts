@@ -13,7 +13,6 @@ import type { FanContext } from '../fan/identity/fan-identity.service';
 import { FanService } from '../fan/fan.service';
 import { Fan } from '../fan/entities/fan.entity';
 import { Match } from '../match/entities/match.entity';
-import { MatchService } from '../match/match.service';
 import { isSettledMatchStatus } from '../match/match.rules';
 import type { BetNotificationPayload, INotificationsService } from '../notifications/notifications.types';
 import { NOTIFICATIONS_SERVICE } from '../notifications/notifications.types';
@@ -36,9 +35,10 @@ export class BetService {
   constructor(
     @InjectRepository(Bet)
     private readonly betRepository: Repository<Bet>,
+    @InjectRepository(Match)
+    private readonly matchRepository: Repository<Match>,
     private readonly dataSource: DataSource,
     private readonly fanService: FanService,
-    private readonly matchService: MatchService,
     @Inject(NOTIFICATIONS_SERVICE)
     private readonly notifications: INotificationsService,
     private readonly rules: BetRulesConfig,
@@ -51,7 +51,7 @@ export class BetService {
    */
   async create(dto: CreateBetDto, context: FanContext) {
     const fan = await this.fanService.ensureRegistered(context);
-    const match = await this.matchService.getEntity(dto.matchId);
+    const match = await this.getMatch(dto.matchId);
     this.assertMatchOpen(match);
 
     // Ownership, activity and base payment method are validated by FanService (SRP).
@@ -63,7 +63,7 @@ export class BetService {
       );
     }
 
-    const lockedOdd = this.matchService.getOdd(match, dto.selection);
+    const lockedOdd = this.getOdd(match, dto.selection);
     const bet = await this.betRepository.save(
       this.betRepository.create({
         matchId: match.id,
@@ -99,7 +99,7 @@ export class BetService {
 
   /** All bets placed on a match (sports administrator view). */
   async listByMatch(matchId: number) {
-    const match = await this.matchService.getEntity(matchId);
+    const match = await this.getMatch(matchId);
     const bets = await this.betRepository.find({
       where: { matchId: match.id },
       order: { id: 'ASC' },
@@ -125,7 +125,7 @@ export class BetService {
       throw new ConflictException('Only registered bets that are not settled can be cancelled.');
     }
 
-    const match = await this.matchService.getEntity(bet.matchId);
+    const match = await this.getMatch(bet.matchId);
     const now = new Date();
     if (!canCancelBet(match, now, this.rules.cancellationRules)) {
       throw new ConflictException(cancellationRejection(match, now));
@@ -136,6 +136,15 @@ export class BetService {
     bet.settled = true;
     bet.settledAt = now;
     const saved = await this.betRepository.save(bet);
+    await this.notifyQuietly(
+      this.buildNotification(
+        'BET_SETTLED',
+        fan.externalUserId,
+        context.email,
+        saved,
+      ),
+      `cancelled bet ${saved.id}`,
+    );
     return this.mapper.toResponse(saved);
   }
 
@@ -220,6 +229,25 @@ export class BetService {
     return summary;
   }
 
+  private async getMatch(matchId: number): Promise<Match> {
+    const match = await this.matchRepository.findOne({ where: { id: matchId } });
+    if (!match) throw new NotFoundException(`Match #${matchId} was not found.`);
+    return match;
+  }
+
+  private getOdd(match: Match, selection: 'HOME' | 'AWAY' | 'DRAW'): number {
+    const odd =
+      selection === 'HOME'
+        ? match.homeOdd
+        : selection === 'AWAY'
+          ? match.awayOdd
+          : match.drawOdd;
+    if (!Number.isFinite(odd) || odd < 1) {
+      throw new ConflictException('The match does not have a valid odd for that selection.');
+    }
+    return odd;
+  }
+
   private assertMatchOpen(match: Match): void {
     const now = new Date();
     if (match.status === 'CANCELLED') {
@@ -278,7 +306,8 @@ export class BetService {
   private async loadMatches(ids: number[]): Promise<Map<number, Match>> {
     const unique = [...new Set(ids)];
     if (unique.length === 0) return new Map();
-    const matches = await this.matchService.listEntities(unique);
+    if (unique.length === 0) return new Map();
+    const matches = await this.matchRepository.find({ where: { id: In(unique) } });
     return new Map(matches.map((match) => [match.id, match]));
   }
 

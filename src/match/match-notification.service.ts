@@ -63,6 +63,10 @@ export class MatchNotificationService {
     return this.notifyFollowersEvent(match, 'MATCH_CANCELLED');
   }
 
+  notifyFinished(match: Match): Promise<void> {
+    return this.notifyFollowersEvent(match, 'MATCH_FINISHED');
+  }
+
   async notifyUpcomingReminders(days?: number): Promise<ReminderRunSummary> {
     const windowDays = this.resolveWindowDays(days);
     const summary: ReminderRunSummary = {

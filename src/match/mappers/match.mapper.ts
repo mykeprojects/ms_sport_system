@@ -5,12 +5,20 @@ import { Match } from '../entities/match.entity';
 
 @Injectable()
 export class MatchMapper {
-  toResponse(match: Match): MatchResponseDto {
-    return toMatchResponse(match);
+  toResponse(
+    match: Match,
+    scores: { homeScore: number; awayScore: number } = { homeScore: 0, awayScore: 0 },
+  ): MatchResponseDto {
+    return toMatchResponse(match, scores);
   }
 
-  toResponseList(matches: Match[]): MatchResponseDto[] {
-    return matches.map((match) => toMatchResponse(match));
+  toResponseList(
+    matches: Match[],
+    scores: Map<number, { homeScore: number; awayScore: number }> = new Map(),
+  ): MatchResponseDto[] {
+    return matches.map((match) =>
+      toMatchResponse(match, scores.get(match.id) ?? { homeScore: 0, awayScore: 0 }),
+    );
   }
 
   toCreateEntity(dto: CreateMatchDto): Match {

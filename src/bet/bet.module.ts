@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { FanModule } from '../fan/fan.module';
-import { MatchModule } from '../match/match.module';
+import { Match } from '../match/entities/match.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { BetController } from './bet.controller';
 import { BetService } from './bet.service';
@@ -11,8 +11,13 @@ import { BetMapper } from './mappers/bet.mapper';
 import { MatchBetController } from './match-bet.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Bet]), FanModule, MatchModule, NotificationsModule],
+  imports: [
+    TypeOrmModule.forFeature([Bet, Match]),
+    FanModule,
+    NotificationsModule,
+  ],
   controllers: [BetController, MatchBetController],
   providers: [BetService, BetMapper, BetRulesConfig],
+  exports: [BetService],
 })
 export class BetModule {}

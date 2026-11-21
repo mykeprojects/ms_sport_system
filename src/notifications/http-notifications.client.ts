@@ -150,25 +150,59 @@ export class HttpNotificationsClient implements INotificationsService {
   }
 
   private buildBetSubject(payload: BetNotificationPayload): string {
-    return payload.type === 'BET_REGISTERED'
-      ? `Bet registered #${payload.betId}`
-      : `Bet settled #${payload.betId}`;
+    if (payload.type === 'BET_REGISTERED') {
+      return `Apuesta registrada #${payload.betId}`;
+    }
+    if (payload.status === 'WON') {
+      return `Apuesta ganada #${payload.betId}`;
+    }
+    if (payload.status === 'LOST') {
+      return `Apuesta perdida #${payload.betId}`;
+    }
+    if (payload.status === 'CANCELLED') {
+      return `Apuesta cancelada #${payload.betId}`;
+    }
+    if (payload.status === 'VOIDED') {
+      return `Apuesta anulada #${payload.betId}`;
+    }
+    return `Resultado de apuesta #${payload.betId}`;
   }
 
   private buildBetContent(payload: BetNotificationPayload): string {
     const lines = [
       payload.type === 'BET_REGISTERED'
-        ? 'Your bet has been registered.'
-        : 'Your bet has been settled.',
-      `Bet #${payload.betId} | Match #${payload.matchId}`,
-      `Selection: ${payload.selection}`,
-      `Stake: ${payload.stakeAmount} | Odd: ${payload.lockedOdd}`,
-      `Status: ${payload.status}`,
+        ? 'Tu apuesta fue registrada.'
+        : payload.status === 'WON'
+          ? '¡Ganaste la apuesta!'
+          : payload.status === 'LOST'
+            ? 'La apuesta quedó perdida.'
+            : payload.status === 'CANCELLED'
+              ? 'La apuesta quedó cancelada.'
+              : 'La apuesta quedó anulada.',
+      `Apuesta #${payload.betId} | Partido #${payload.matchId}`,
+      `Selección: ${this.selectionLabel(payload.selection)}`,
+      `Valor apostado: ${payload.stakeAmount} | Cuota: ${payload.lockedOdd}`,
+      `Estado: ${this.betStatusLabel(payload.status)}`,
     ];
     if (payload.settledAmount != null) {
-      lines.push(`Settled amount: ${payload.settledAmount}`);
+      lines.push(`Valor recibido: ${payload.settledAmount}`);
     }
     return lines.join('\n');
+  }
+
+  private selectionLabel(selection: string): string {
+    if (selection === 'HOME') return 'Equipo local';
+    if (selection === 'AWAY') return 'Equipo visitante';
+    if (selection === 'DRAW') return 'Empate';
+    return selection;
+  }
+
+  private betStatusLabel(status: string): string {
+    if (status === 'WON') return 'Ganada';
+    if (status === 'LOST') return 'Perdida';
+    if (status === 'CANCELLED') return 'Cancelada';
+    if (status === 'VOIDED') return 'Anulada';
+    return 'Registrada';
   }
 
   private buildMatchSubject(payload: MatchNotificationPayload): string {

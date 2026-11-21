@@ -25,7 +25,10 @@ export class MatchTrackingService implements OnModuleDestroy {
   ) {}
 
   async board(matchId: number) {
-    await this.matches.getEntity(matchId);
+    const match = await this.matches.getEntity(matchId);
+    if (match.status === 'SCHEDULED' || match.status === 'BETTING_OPEN' || match.status === 'BETTING_CLOSED') {
+      throw new BadRequestException('The match must be started before spatial tracking can begin.');
+    }
     const board = await this.store.findSession(matchId);
     if (!board) throw new BadRequestException('The match tracking session was not started.');
     return board;
@@ -33,8 +36,8 @@ export class MatchTrackingService implements OnModuleDestroy {
 
   async start(matchId: number, dto: StartMatchTrackingDto) {
     const match = await this.matches.getEntity(matchId);
-    if (match.status === 'CANCELLED' || match.status === 'FINISHED') {
-      throw new BadRequestException('Finished or cancelled matches cannot start spatial tracking.');
+    if (match.status !== 'IN_PROGRESS') {
+      throw new BadRequestException('The match must be started before spatial tracking can begin.');
     }
     const state = await this.catalog.load();
     const sport = match.sportId == null ? null : state.sports.find((item) => item.id === match.sportId);

@@ -20,6 +20,8 @@ export class MatchResponseDto {
   status!: MatchStatus;
   bettingEnabled!: boolean;
   officialResult!: OfficialResult | null;
+  homeScore!: number;
+  awayScore!: number;
   homeOdd!: number;
   awayOdd!: number;
   drawOdd!: number;
@@ -27,7 +29,10 @@ export class MatchResponseDto {
   updatedAt!: Date;
 }
 
-export function toMatchResponse(match: Match): MatchResponseDto {
+export function toMatchResponse(
+  match: Match,
+  scores: { homeScore: number; awayScore: number } = { homeScore: 0, awayScore: 0 },
+): MatchResponseDto {
   return {
     id: match.id,
     homeTeam: match.homeTeam,
@@ -47,6 +52,8 @@ export function toMatchResponse(match: Match): MatchResponseDto {
     status: match.status,
     bettingEnabled: match.bettingEnabled,
     officialResult: match.officialResult,
+    homeScore: scores.homeScore,
+    awayScore: scores.awayScore,
     homeOdd: match.homeOdd,
     awayOdd: match.awayOdd,
     drawOdd: match.drawOdd,

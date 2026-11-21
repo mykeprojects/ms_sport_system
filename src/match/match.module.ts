@@ -17,12 +17,17 @@ import { MatchReminderScheduler } from './match-reminder.scheduler';
 import { MatchService } from './match.service';
 import { MatchMapper } from './mappers/match.mapper';
 import { TournamentMatchController } from './tournament-match.controller';
+import { Annotation } from '../annotation/entities/annotation.entity';
+import { MatchTrackingSession } from './tracking/entities/match-tracking.entity';
+import { BetModule } from '../bet/bet.module';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Match,
       MatchReminderDelivery,
+      Annotation,
+      MatchTrackingSession,
       Tournament,
       TournamentPhase,
       TournamentRegistration,
@@ -33,6 +38,7 @@ import { TournamentMatchController } from './tournament-match.controller';
     ]),
     NotificationsModule,
     FanModule,
+    BetModule,
   ],
   controllers: [MatchController, TournamentMatchController],
   providers: [MatchService, MatchNotificationService, MatchReminderScheduler, MatchMapper],

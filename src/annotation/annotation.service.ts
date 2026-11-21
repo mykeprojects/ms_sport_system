@@ -54,7 +54,13 @@ export class AnnotationService {
   }
 
   async remove(matchId: number, annotationId: number) {
-    await this.matchService.getEntity(matchId);
+    const match = await this.matchService.getEntity(matchId);
+    if (match.status === 'FINISHED') {
+      throw new ConflictException('Annotations cannot be deleted after the match is finished.');
+    }
+    if (match.status !== 'IN_PROGRESS') {
+      throw new ConflictException('Annotations can only be deleted while the match is in progress.');
+    }
     const annotation = await this.annotationRepository.findOne({
       where: { id: annotationId, matchId },
     });
@@ -64,8 +70,8 @@ export class AnnotationService {
   }
 
   private assertMatchCanReceiveAnnotations(status: string): void {
-    if (status === 'CANCELLED') {
-      throw new ConflictException('A cancelled match cannot receive annotations.');
+    if (status !== 'IN_PROGRESS') {
+      throw new ConflictException('Annotations can only be registered while the match is in progress.');
     }
   }
 }

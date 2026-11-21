@@ -43,6 +43,9 @@ export class TypeOrmMatchTrackingStore extends MatchTrackingPositionStore {
 
     const match = await this.matches.findOne({ where: { id: matchId } });
     if (!match) throw new NotFoundException(`Match #${matchId} was not found.`);
+    if (match.status !== 'IN_PROGRESS') {
+      throw new ConflictException('The match must be started before spatial tracking can begin.');
+    }
 
     const state = await this.catalog.load();
     const session = await this.sessions.save(this.sessions.create({
@@ -64,11 +67,8 @@ export class TypeOrmMatchTrackingStore extends MatchTrackingPositionStore {
 
       for (let index = 0; index < activeContracts.length; index++) {
         const contract = activeContracts[index];
-        const row = index % 3;
-        const column = Math.floor(index / 3);
-        const xBase = side === 'HOME' ? options.fieldWidth * 0.22 : options.fieldWidth * 0.78;
-        const x = Math.round((xBase + (side === 'HOME' ? column * 8 : -column * 8)) * 100) / 100;
-        const y = Math.round(((row + 1) * options.fieldHeight / (activeContracts.length > 3 ? 4 : 2)) * 100) / 100;
+        const x = Math.round(Math.random() * options.fieldWidth * 100) / 100;
+        const y = Math.round(Math.random() * options.fieldHeight * 100) / 100;
         await this.trackingPlayers.save(this.trackingPlayers.create({
           sessionId: session.id,
           matchId,
@@ -97,8 +97,8 @@ export class TypeOrmMatchTrackingStore extends MatchTrackingPositionStore {
       sessionId: session.id,
       matchId,
       name: options.ballName,
-      initialX: options.fieldWidth / 2,
-      initialY: options.fieldHeight / 2,
+      initialX: Math.round(Math.random() * options.fieldWidth * 100) / 100,
+      initialY: Math.round(Math.random() * options.fieldHeight * 100) / 100,
     }));
     await this.positions.save(this.positions.create({
       sessionId: session.id,
@@ -167,6 +167,10 @@ export class TypeOrmMatchTrackingStore extends MatchTrackingPositionStore {
   }
 
   async resume(matchId: number): Promise<TrackingBoard> {
+    const match = await this.matches.findOne({ where: { id: matchId } });
+    if (match && match.status !== 'IN_PROGRESS') {
+      throw new ConflictException('Spatial tracking can only continue for an in-progress match.');
+    }
     const session = await this.sessions.findOne({ where: { matchId } });
     if (!session) throw new NotFoundException('The match tracking session was not started.');
     if (session.status !== 'PAUSED') {
@@ -190,6 +194,10 @@ export class TypeOrmMatchTrackingStore extends MatchTrackingPositionStore {
   }
 
   private async requireRunning(matchId: number): Promise<MatchTrackingSession> {
+    const match = await this.matches.findOne({ where: { id: matchId } });
+    if (match && match.status !== 'IN_PROGRESS') {
+      throw new ConflictException('Spatial tracking can only continue for an in-progress match.');
+    }
     const session = await this.sessions.findOne({ where: { matchId } });
     if (!session) throw new NotFoundException('The match tracking session was not started.');
     if (session.status !== 'RUNNING') {

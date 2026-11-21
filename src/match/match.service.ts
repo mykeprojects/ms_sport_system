@@ -13,11 +13,14 @@ import { TournamentGroup } from '../tournament_group/entities/tournament-group.e
 import { TournamentGroupTeam } from '../tournament_group/entities/tournament-group-team.entity';
 import { TournamentPhase } from '../tournament_phase/entities/tournament-phase.entity';
 import { TournamentRegistration } from '../tournament_registration/entities/tournament-registration.entity';
-import { CreateMatchDto, RegisterResultDto, UpdateMatchDto } from './dto/match.dtos';
+import { CreateMatchDto, UpdateMatchDto } from './dto/match.dtos';
 import { Match } from './entities/match.entity';
 import { MatchMapper } from './mappers/match.mapper';
 import { MatchNotificationService } from './match-notification.service';
 import { BETTABLE_STATUSES, MatchStatus } from './match.constants';
+import { Annotation } from '../annotation/entities/annotation.entity';
+import { MatchTrackingSession } from './tracking/entities/match-tracking.entity';
+import { BetService } from '../bet/bet.service';
 import {
   isDateWithinRange,
   isDuplicateMatchSlot,
@@ -62,8 +65,13 @@ export class MatchService {
     private readonly groupTeamRepository: Repository<TournamentGroupTeam>,
     @InjectRepository(Team)
     private readonly teamRepository: Repository<Team>,
+    @InjectRepository(Annotation)
+    private readonly annotationRepository: Repository<Annotation>,
+    @InjectRepository(MatchTrackingSession)
+    private readonly trackingSessionRepository: Repository<MatchTrackingSession>,
     private readonly notifications: MatchNotificationService,
     private readonly mapper: MatchMapper,
+    private readonly betService: BetService,
   ) {}
 
   async create(dto: CreateMatchDto, scoped: ScopedMatchInput = {}) {
@@ -116,7 +124,7 @@ export class MatchService {
       });
       const saved = await this.matchRepository.save(entity);
       await this.notifications.notifyCreated(saved);
-      return this.mapper.toResponse(saved);
+      return this.mapper.toResponse(saved, await this.scoresForMatch(saved));
     } catch (error) {
       if (this.isMissingReference(error)) {
         throw new NotFoundException('The selected sport, tournament or team does not exist.');
@@ -135,7 +143,7 @@ export class MatchService {
       where: Object.keys(where).length ? where : undefined,
       order: { startsAt: 'ASC' },
     });
-    return this.mapper.toResponseList(matches);
+    return this.mapper.toResponseList(matches, await this.scoresForMatches(matches));
   }
 
   /** Matches that are currently open to receive bets. */
@@ -145,7 +153,8 @@ export class MatchService {
       where: { bettingEnabled: true, status: In(BETTABLE_STATUSES) },
       order: { startsAt: 'ASC' },
     });
-    return this.mapper.toResponseList(matches.filter((match) => isOpenForBetting(match, now)));
+    const available = matches.filter((match) => isOpenForBetting(match, now));
+    return this.mapper.toResponseList(available, await this.scoresForMatches(available));
   }
 
   /** Matches starting within the next `days` days, used for fan reminders. */
@@ -160,11 +169,12 @@ export class MatchService {
       },
       order: { startsAt: 'ASC' },
     });
-    return this.mapper.toResponseList(matches);
+    return this.mapper.toResponseList(matches, await this.scoresForMatches(matches));
   }
 
   async findOne(id: number) {
-    return this.mapper.toResponse(await this.getEntity(id));
+    const match = await this.getEntity(id);
+    return this.mapper.toResponse(match, await this.scoresForMatch(match));
   }
 
   async update(id: number, dto: UpdateMatchDto) {
@@ -174,7 +184,7 @@ export class MatchService {
     }
     if (dto.status === 'FINISHED') {
       throw new BadRequestException(
-        'Official results must be registered through the result endpoint.',
+        'Matches can only be finished through the finish endpoint using annotations.',
       );
     }
 
@@ -233,7 +243,7 @@ export class MatchService {
     } else if (this.scheduleChanged(previous, saved)) {
       await this.notifications.notifyUpdated(saved);
     }
-    return this.mapper.toResponse(saved);
+    return this.mapper.toResponse(saved, await this.scoresForMatch(saved));
   }
 
   async remove(id: number) {
@@ -250,23 +260,85 @@ export class MatchService {
     return { message: `Match #${id} removed successfully.` };
   }
 
-  /**
-   * Records the official result. `VOID` marks the match as cancelled so its
-   * bets are later settled as voided (stake returned).
-   */
-  async registerResult(id: number, dto: RegisterResultDto) {
+  async start(id: number) {
+    const match = await this.getEntity(id);
+    if (match.status === 'FINISHED' || match.status === 'CANCELLED') {
+      throw new ConflictException('A finished or cancelled match cannot be started.');
+    }
+    if (match.status === 'IN_PROGRESS') {
+      throw new ConflictException('The match is already in progress.');
+    }
+    match.status = 'IN_PROGRESS';
+    match.bettingEnabled = false;
+    match.bettingClosesAt = match.bettingClosesAt > new Date() ? new Date() : match.bettingClosesAt;
+    const saved = await this.matchRepository.save(match);
+    return this.mapper.toResponse(saved, await this.scoresForMatch(saved));
+  }
+
+  async finish(id: number) {
     const match = await this.getEntity(id);
     if (match.status === 'FINISHED') {
-      throw new ConflictException('This match already has an official result.');
+      throw new ConflictException('This match is already finished.');
     }
     if (match.status === 'CANCELLED') {
-      throw new ConflictException('This match was cancelled.');
+      throw new ConflictException('A cancelled match cannot be finished.');
+    }
+    if (match.status !== 'IN_PROGRESS') {
+      throw new ConflictException('The match must be in progress before it can be finished.');
     }
 
-    match.officialResult = dto.officialResult;
-    match.status = dto.officialResult === 'VOID' ? 'CANCELLED' : 'FINISHED';
+    const annotations = await this.annotationRepository.find({ where: { matchId: id } });
+    const homeAnnotations = annotations.filter((annotation) => annotation.teamId === match.homeTeamId).length;
+    const awayAnnotations = annotations.filter((annotation) => annotation.teamId === match.awayTeamId).length;
+    match.officialResult =
+      homeAnnotations > awayAnnotations ? 'HOME' :
+      awayAnnotations > homeAnnotations ? 'AWAY' :
+      'DRAW';
+    match.status = 'FINISHED';
+    match.bettingEnabled = false;
     const saved = await this.matchRepository.save(match);
-    return this.mapper.toResponse(saved);
+    await this.stopTrackingSession(id);
+    await this.betService.settle(id);
+    await this.notifications.notifyFinished(saved);
+    return this.mapper.toResponse(saved, await this.scoresForMatch(saved));
+  }
+
+  private async scoresForMatch(match: Match): Promise<{ homeScore: number; awayScore: number }> {
+    const scores = await this.scoresForMatches([match]);
+    return scores.get(match.id) ?? { homeScore: 0, awayScore: 0 };
+  }
+
+  private async scoresForMatches(
+    matches: Match[],
+  ): Promise<Map<number, { homeScore: number; awayScore: number }>> {
+    const result = new Map<number, { homeScore: number; awayScore: number }>();
+    if (matches.length === 0) return result;
+
+    const matchById = new Map(matches.map((match) => [match.id, match]));
+    const annotations = await this.annotationRepository.find({
+      where: { matchId: In([...matchById.keys()]) },
+    });
+
+    for (const match of matches) {
+      result.set(match.id, { homeScore: 0, awayScore: 0 });
+    }
+    for (const annotation of annotations) {
+      const match = matchById.get(annotation.matchId);
+      if (!match) continue;
+      const score = result.get(match.id);
+      if (!score) continue;
+      if (annotation.teamId === match.homeTeamId) score.homeScore += 1;
+      if (annotation.teamId === match.awayTeamId) score.awayScore += 1;
+    }
+    return result;
+  }
+
+  private async stopTrackingSession(matchId: number): Promise<void> {
+    const session = await this.trackingSessionRepository.findOne({ where: { matchId } });
+    if (!session || session.status === 'STOPPED') return;
+    session.status = 'STOPPED';
+    session.endedAt = new Date();
+    await this.trackingSessionRepository.save(session);
   }
 
   /** Loads raw entities (with odds) for queries shared with BetService. */

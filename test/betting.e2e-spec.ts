@@ -23,7 +23,7 @@ import { PaymentMethod } from '../src/payment_method/entities/payment_method.ent
  * HU-GC-11 integration flow (service level, real database):
  * fan registration -> own payment methods -> bet with frozen odd ->
  * validations (stake, ownership, windows) -> cancellation ->
- * official result -> settlement exactly once.
+ * annotation-based result -> settlement exactly once.
  */
 describe('HU-GC-11 betting flow', () => {
   let app: TestingModule;
@@ -172,7 +172,7 @@ describe('HU-GC-11 betting flow', () => {
 
   it('places the bet that will be settled later', async () => {
     const bet = await betService.create(
-      { matchId, fanPaymentMethodId, selection: 'HOME', stakeAmount: 30 },
+      { matchId, fanPaymentMethodId, selection: 'DRAW', stakeAmount: 30 },
       fanA,
     );
     settledBetId = bet.id;
@@ -262,10 +262,11 @@ describe('HU-GC-11 betting flow', () => {
     await expect(betService.settle(secondMatchId)).rejects.toThrow(ConflictException);
   });
 
-  it('records the official result of the finished match', async () => {
-    const result = await matchService.registerResult(matchId, { officialResult: 'HOME' });
+  it('starts and finishes the match using its annotation-based result', async () => {
+    await matchService.start(matchId);
+    const result = await matchService.finish(matchId);
     expect(result.status).toBe('FINISHED');
-    expect(result.officialResult).toBe('HOME');
+    expect(result.officialResult).toBe('DRAW');
   });
 
   it('settles the pending bet with the frozen odd and ignores it afterwards', async () => {
